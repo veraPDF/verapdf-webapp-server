@@ -1,12 +1,39 @@
-version: '3'
+version: '3.4'
 services:
+  local-storage-service-database:
+    build: ./database
+    restart: always
+    environment:
+      POSTGRES_USER: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
+      POSTGRES_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
+      POSTGRES_DB: verapdfdb
+    volumes:
+        - type: volume
+          source: filestorage_database_data
+          target: /var/lib/postgresql/data
   local-storage-service:
     build: ../local-storage-service/server
     expose:
       - 8080
+    depends_on:
+      - local-storage-service-database
+    environment:
+      LOCALSTORAGE_DATABASE_USERNAME: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
+      LOCALSTORAGE_DATABASE_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
+      LOCALSTORAGE_DATABASE_DB: verapdfdb    # the same as in local-storage-service-database
+      LOCALSTORAGE_DATABASE_HOST: local-storage-service-database
+      LOCALSTORAGE_DATABASE_PORT: 5432
+      LOCALSTORAGE_DISK_MIN_SPACE_THRESHOLD: ${LOCAL_STORAGE_SERVICE_DISK_MIN_SPACE_THRESHOLD}
+    volumes:
+      - type: volume
+        source: filestorage_server_files
+        target: /opt/verapdf/localstorageservice/files
     restart: always
   job-service:
     build: ../job-service/server
     expose:
       - 8080
     restart: always
+volumes:
+  filestorage_database_data:
+  filestorage_server_files:

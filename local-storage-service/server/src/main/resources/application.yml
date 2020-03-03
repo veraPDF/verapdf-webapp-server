@@ -1,7 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${localstorage.database.host:localhost}:${localstorage.database.port:5432}/${localstorage.database.db:postgres}
+    username: ${localstorage.database.username}
+    password: ${localstorage.database.password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
 server:
   servlet:
-    context-path: /api/file
+    context-path: /api/file-storage
+
 management:
   endpoints:
     web:
       base-path: /status
+
+verapdf:
+  files:
+    min-space-threshold: ${localstorage.disk.min.space.threshold}
+    base-dir: /opt/verapdf/localstorageservice/files

@@ -22,14 +22,13 @@ docker-compose up -d
 
 **Available service endpoints**
 
-Once you started stack you can use the following services:
+Once you started the stack you can use the following services:
 
-* file storage service: http://localhost/api/file
+* file storage service: http://localhost/api/file-storage
 * jobs service: http://localhost/api/jobs
 
-To check service availability you can get its status using `/status` endpoints, e.g.:
-http://localhost/api/file/status
-http://localhost/api/jobs/status
+To check service availability you can request service status.
+The status endpoint described in [API Reference] (https://github.com/veraPDF/verapdf-webapp-server/wiki/API-Reference)
 
 **Stop service stack**
 ```
@@ -51,3 +50,6 @@ Config assumes that you launch services on the following ports:
 
  * file storage service: `8090`
  * jobs service: `8091`
+ 
+ ## API Reference page
+ https://github.com/veraPDF/verapdf-webapp-server/wiki/API-Reference
