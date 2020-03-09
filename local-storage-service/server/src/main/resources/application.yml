@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /api/file
+management:
+  endpoints:
+    web:
+      base-path: /status
