@@ -1,0 +1,7 @@
+version: '3'
+services:
+  local-storage-service-server-container:
+    build: ./local-storage-service/server
+    ports:
+      - "8090:8080"
+    restart: always
