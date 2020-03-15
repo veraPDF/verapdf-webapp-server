@@ -1,0 +1,7 @@
+version: '3'
+services:
+  local-storage-service:
+    build: ../local-storage-service/server
+    expose:
+      - 8080
+    restart: always

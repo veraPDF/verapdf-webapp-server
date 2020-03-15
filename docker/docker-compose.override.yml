@@ -1,0 +1,10 @@
+version: '3'
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+      args:
+        profile: ${PROFILE}
+    ports:
+      - 80:80
