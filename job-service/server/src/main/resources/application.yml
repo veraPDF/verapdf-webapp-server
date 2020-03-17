@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /api/job
+management:
+  endpoints:
+    web:
+      base-path: /status
