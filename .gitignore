@@ -34,3 +34,5 @@ build/
 *-local.yml
 
 /temp/
+
+*local.conf

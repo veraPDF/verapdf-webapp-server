@@ -25,8 +25,11 @@ docker-compose up -d
 Once you started stack you can use the following services:
 
 * file storage service: http://localhost/api/file
+* jobs service: http://localhost/api/jobs
 
-To check service availability you can get its status using `/status` endpoint, e.g.: http://localhost/api/file/status
+To check service availability you can get its status using `/status` endpoints, e.g.:
+http://localhost/api/file/status
+http://localhost/api/jobs/status
 
 **Stop service stack**
 ```
@@ -47,3 +50,4 @@ containers.
 Config assumes that you launch services on the following ports:
 
  * file storage service: `8090`
+ * jobs service: `8091`
