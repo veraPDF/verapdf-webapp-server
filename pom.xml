@@ -7,6 +7,7 @@
         <module>common</module>
         <module>job-service</module>
         <module>local-storage-service</module>
+        <module>queue-client</module>
     </modules>
 
     <parent>
