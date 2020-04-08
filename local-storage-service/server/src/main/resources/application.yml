@@ -16,7 +16,7 @@ spring:
 
 server:
   servlet:
-    context-path: /api/file-storage
+    context-path: /api
 
 management:
   endpoints:

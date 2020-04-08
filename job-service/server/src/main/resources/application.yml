@@ -1,6 +1,6 @@
 server:
   servlet:
-    context-path: /api/jobs
+    context-path: /api
 management:
   endpoints:
     web:
