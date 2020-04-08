@@ -8,3 +8,6 @@ services:
         profile: ${PROFILE}
     ports:
       - 80:80
+    depends_on:
+      - local-storage-service
+      - job-service

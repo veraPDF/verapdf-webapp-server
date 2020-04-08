@@ -5,3 +5,8 @@ services:
     expose:
       - 8080
     restart: always
+  job-service:
+    build: ../job-service/server
+    expose:
+      - 8080
+    restart: always
