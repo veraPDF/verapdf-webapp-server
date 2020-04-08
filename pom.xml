@@ -4,8 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <modules>
-        <module>local-storage-service</module>
+        <module>common</module>
         <module>job-service</module>
+        <module>local-storage-service</module>
     </modules>
 
     <parent>
