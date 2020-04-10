@@ -24,6 +24,8 @@ services:
       LOCALSTORAGE_DATABASE_HOST: local-storage-service-database
       LOCALSTORAGE_DATABASE_PORT: 5432
       LOCALSTORAGE_DISK_MIN_SPACE_THRESHOLD: ${LOCAL_STORAGE_SERVICE_DISK_MIN_SPACE_THRESHOLD}
+      LOCALSTORAGE_MAX_FILE_SIZE: 100MB
+      LOCALSTORAGE_MAX_REQUEST_SIZE: 101MB
     volumes:
       - type: volume
         source: filestorage_server_files

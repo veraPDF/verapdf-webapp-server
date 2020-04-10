@@ -9,6 +9,10 @@ spring:
         current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
     hibernate:
       ddl-auto: create-drop
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 101MB
 verapdf:
   files:
     base-dir: ${java.io.tmpdir}

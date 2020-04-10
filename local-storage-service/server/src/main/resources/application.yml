@@ -9,6 +9,10 @@ spring:
     show-sql: false
     hibernate:
       ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: ${localstorage.max.file.size}
+      max-request-size: ${localstorage.max.request.size}
 
 server:
   servlet:

@@ -5,7 +5,7 @@ import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.DigestUtils;
-import org.verapdf.webapp.error.exception.VeraPDFBackendException;
+import org.verapdf.webapp.error.exception.BadRequestException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -23,13 +23,15 @@ public final class FilesTool {
 	}
 
 	public static void saveFileOnDiskAndCheck(InputStream fileStream, File fileToSave,
-	                                          String expectedContentMD5) throws VeraPDFBackendException, IOException {
+	                                          String expectedContentMD5) throws BadRequestException, IOException {
 		try {
 			try (OutputStream out = Files.newOutputStream(fileToSave.toPath())) {
 				IOUtils.copyLarge(fileStream, out);
 			}
-			if (!expectedContentMD5.equals(evaluateMD5(fileToSave))) {
-				throw new VeraPDFBackendException("Expected file checksum doesn't match obtained file checksum");
+			String actualContentMD5 = evaluateMD5(fileToSave);
+			if (!expectedContentMD5.equals(actualContentMD5)) {
+				throw new BadRequestException("Expected file checksum doesn't match obtained file checksum. Expected: "
+				                              + actualContentMD5 + ", actual: " + expectedContentMD5);
 			}
 		} catch (Throwable e) {
 			deleteFile(fileToSave);
