@@ -1,0 +1,18 @@
+spring:
+  rabbitmq:
+    port: 5672
+    host: localhost
+    username: guest
+    password: guest
+    listener:
+      simple:
+        concurrency: 4
+        max-concurrency: 8
+        prefetch: 1
+    publisher-confirm-type: correlated
+
+verapdf:
+  rabbitmq:
+    queue:
+      name: jobsQueueTest
+      max-size: 180B

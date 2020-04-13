@@ -36,6 +36,23 @@ services:
     expose:
       - 8080
     restart: always
+
+  rabbitmq:
+    build: ./rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_DEFAULT_PASSWORD}
+    volumes:
+      - type: volume
+        source: rabbitmq_database_data
+        target: /var/lib/rabbitmq/
+      - type: volume
+        source: rabbitmq_configurations
+        target: /etc/rabbitmq/rabbitmq.config
+
 volumes:
   filestorage_database_data:
   filestorage_server_files:
+  rabbitmq_database_data:
+  rabbitmq_configuration:
