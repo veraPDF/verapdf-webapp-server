@@ -11,8 +11,8 @@ spring:
       ddl-auto: validate
   servlet:
     multipart:
-      max-file-size: ${localstorage.max.file.size}
-      max-request-size: ${localstorage.max.request.size}
+      max-file-size: ${localstorage.max.file.size:100MB}
+      max-request-size: ${localstorage.max.request.size:101MB}
 
 server:
   servlet:
@@ -25,5 +25,5 @@ management:
 
 verapdf:
   files:
-    min-space-threshold: ${localstorage.disk.min.space.threshold}
+    min-space-threshold: ${localstorage.disk.min.space.threshold:5GB}
     base-dir: /opt/verapdf/localstorageservice/files
