@@ -1,5 +1,6 @@
 package org.verapdf.webapp.localstorageservice.server.controller;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
@@ -30,16 +31,19 @@ public class FileController {
 		return storedFileService.saveStoredFile(file, contentMD5);
 	}
 
-	@GetMapping(value = "/{fileId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public StoredFileDTO getFileData(@PathVariable UUID fileId) throws NotFoundException {
-		return storedFileService.getStoredFileById(fileId);
-	}
-	@GetMapping(value = "/{fileId}", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping(value = "/{fileId}")
+	@Order(1)
 	public ResponseEntity<Resource> downloadFile(@PathVariable UUID fileId) throws NotFoundException,
 	                                                                               FileNotFoundException {
 		Pair<MediaType, Resource> result = storedFileService.getFileResourceById(fileId);
 		return ResponseEntity.ok()
 		                     .contentType(result.getFirst())
 		                     .body(result.getSecond());
+	}
+
+	@GetMapping(value = "/{fileId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Order(2)
+	public StoredFileDTO getFileData(@PathVariable UUID fileId) throws NotFoundException {
+		return storedFileService.getStoredFileById(fileId);
 	}
 }
