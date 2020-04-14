@@ -4,10 +4,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
+import org.verapdf.webapp.error.exception.VeraPDFBackendException;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
+import org.verapdf.webapp.jobservice.model.dto.JobTaskDTO;
+import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
+import org.verapdf.webapp.jobservice.model.entity.enums.TaskStatus;
 import org.verapdf.webapp.jobservice.server.service.JobService;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,5 +40,10 @@ public class JobController {
 	public JobDTO updateJob(@PathVariable UUID jobId, @RequestBody @Valid JobDTO jobDTO) throws NotFoundException,
 	                                                                                            ConflictException {
 		return jobService.updateJob(jobId, jobDTO);
+	}
+
+	@PostMapping("/{jobId}/execution")
+	public JobDTO startJobExecution(@PathVariable UUID jobId) throws VeraPDFBackendException {
+		return jobService.startJobExecution(jobId);
 	}
 }

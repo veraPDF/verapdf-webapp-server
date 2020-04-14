@@ -1,37 +1,50 @@
 package org.verapdf.webapp.jobservice.server.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.verapdf.webapp.error.exception.BadRequestException;
 import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
+import org.verapdf.webapp.error.exception.VeraPDFBackendException;
+import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskDTO;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
 import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
-import org.verapdf.webapp.jobservice.model.dto.JobTaskDTO;
+import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
+import org.verapdf.webapp.jobservice.model.entity.enums.TaskStatus;
 import org.verapdf.webapp.jobservice.server.entity.Job;
-import org.verapdf.webapp.jobservice.server.mapper.JobTaskMapper;
+import org.verapdf.webapp.jobservice.server.entity.JobTask;
 import org.verapdf.webapp.jobservice.server.mapper.JobMapper;
 import org.verapdf.webapp.jobservice.server.repository.JobRepository;
+import org.verapdf.webapp.jobservice.server.repository.JobTaskRepository;
+import org.verapdf.webapp.queueclient.sender.QueueSender;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 
 @Service
 public class JobService {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
 	private final JobRepository jobRepository;
+	private final JobTaskRepository taskRepository;
+	private final QueueSender queueSender;
 	private final JobMapper jobMapper;
-	private final JobTaskMapper jobTaskMapper;
+	private final ObjectMapper objectMapper;
 
-	public JobService(JobRepository jobRepository,
-	                  JobMapper jobMapper, JobTaskMapper jobTaskMapper) {
+	public JobService(JobRepository jobRepository, JobTaskRepository taskRepository,
+	                  QueueSender queueSender, JobMapper jobMapper,
+	                  ObjectMapper objectMapper) {
 		this.jobRepository = jobRepository;
+		this.taskRepository = taskRepository;
+		this.queueSender = queueSender;
 		this.jobMapper = jobMapper;
-		this.jobTaskMapper = jobTaskMapper;
+		this.objectMapper = objectMapper;
 	}
 
 	@Transactional
@@ -61,10 +74,45 @@ public class JobService {
 		return jobMapper.createDTOFromEntity(job);
 	}
 
+	@Transactional
+	public JobDTO startJobExecution(UUID jobId) throws VeraPDFBackendException {
+
+		Job job = findJobById(jobId);
+
+		if (job.getStatus() != JobStatus.CREATED) {
+			throw new ConflictException("Cannot start already started job with specified id: " + jobId);
+		}
+
+		if (job.getJobTasks() == null || job.getJobTasks().isEmpty()) {
+			throw new BadRequestException("Cannot start job: " + jobId + " without tasks");
+		}
+
+		for (JobTask task : job.getJobTasks()) {
+
+			if (task.getStatus() != TaskStatus.CREATED) {
+				continue;
+			}
+
+			ExecutableTaskDTO executableTaskDTO = new ExecutableTaskDTO(
+					jobId, task.getFileId(), job.getProfile());
+			try {
+				queueSender.sendMessage(objectMapper.writeValueAsString(executableTaskDTO));
+				task.setStatus(TaskStatus.PROCESSING);
+			} catch (JsonProcessingException e) {
+				String errorMessage = "Cannot convert task to json. Exception message: " + e.getMessage();
+				task.setErrorResult(TaskError.PROCESSING_INTERNAL_ERROR, errorMessage);
+				LOGGER.error(errorMessage, e);
+			}
+			taskRepository.saveAndFlush(task);
+		}
+		job.setStatus(JobStatus.PROCESSING);
+		job = jobRepository.saveAndFlush(job);
+
+		return jobMapper.createDTOFromEntity(job);
+	}
 
 	private Job findJobById(UUID jobId) throws NotFoundException {
 		return jobRepository.findById(jobId)
-		                    .orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
+				.orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
 	}
-
 }

@@ -52,12 +52,22 @@ services:
       - 8080
     depends_on:
       - job-service-database
+      - queue
     environment:
       JOBSERVICE_DATABASE_USERNAME: ${JOB_SERVICE_DATABASE_USER}
       JOBSERVICE_DATABASE_PASSWORD: ${JOB_SERVICE_DATABASE_PASSWORD}
       JOBSERVICE_DATABASE_DB: verapdfjobdb    # the same as in job-service-database
       JOBSERVICE_DATABASE_HOST: job-service-database
       JOBSERVICE_DATABASE_PORT: 5432   # do we need to change port to avoid databases conflict on same port
+      AMQP_SERVER_HOST: queue
+      AMQP_USER: ${AMQP_SERVER_USER}
+      AMQP_PASSWORD: ${AMQP_SERVER_PASSWORD}
+      AMQP_SERVER_CONCURRENCY: 4
+      AMQP_SERVER_MAX_CONCURRENCY: 8
+      AMQP_SERVER_SENDING_QUEUE_NAME: requestQueue
+      AMQP_SERVER_SENDING_QUEUE_MAX_SIZE: 2047MB
+      AMQP_SERVER_LISTENING_QUEUE_NAME: replyQueue
+      AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE: 2047MB
     restart: always
 
   # Validation tasks queue

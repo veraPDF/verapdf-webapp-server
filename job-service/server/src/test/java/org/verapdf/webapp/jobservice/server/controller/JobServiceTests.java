@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,6 +25,8 @@ import org.verapdf.webapp.jobservice.model.entity.enums.TaskStatus;
 import org.verapdf.webapp.jobservice.server.entity.Job;
 import org.verapdf.webapp.jobservice.server.entity.JobTask;
 import org.verapdf.webapp.jobservice.server.repository.JobRepository;
+import org.verapdf.webapp.queueclient.listener.QueueListener;
+import org.verapdf.webapp.queueclient.sender.QueueSender;
 
 import java.util.UUID;
 
@@ -39,6 +42,12 @@ public class JobServiceTests {
 
 	@Autowired
 	private JobRepository jobRepository;
+
+	@MockBean
+	private QueueSender queueSender;
+
+	@MockBean
+	private QueueListener queueListener;
 
 	@Test
 	public void createAndGetJobWithoutFilesTest() throws Exception {
