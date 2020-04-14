@@ -504,7 +504,7 @@ public class JobServiceTests {
 		JobTask jobTask = new JobTask();
 		jobTask.setFileId(UUID.fromString(taskId));
 		jobTask.setStatus(TaskStatus.ERROR);
-		jobTask.setErrorType(TaskError.INTERNAL_ERROR);
+		jobTask.setErrorType(TaskError.SENDING_TO_QUEUE_ERROR);
 		jobTask.setErrorMessage("Error");
 
 		Job job = new Job(Profile.TAGGED_PDF);
@@ -523,7 +523,7 @@ public class JobServiceTests {
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '893ce251-4754-4d92-a6bc-69f886ab1ac6'," +
 		                                 "'status':'ERROR'," +
-		                                 "'errorType':'INTERNAL_ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
 		                                 "'errorMessage':'Error'" +
 		                                 "}]}", true));
 	}

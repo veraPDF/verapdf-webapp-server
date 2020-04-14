@@ -1,0 +1,4 @@
+[submodule "worker/src/main/resources/profiles/veraPDF-validation-profiles"]
+	path = worker/src/main/resources/profiles/veraPDF-validation-profiles
+	url = https://github.com/veraPDF/veraPDF-validation-profiles.git
+	branch = 2a859a8abac2da8bde6b1833eab4a9a3288511af

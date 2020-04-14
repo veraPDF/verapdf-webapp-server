@@ -14,8 +14,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
-import org.verapdf.webapp.queueclienthealthcheckcli.handler.SendingErrorCallbackToQueueHandlerImpl;
-import org.verapdf.webapp.queueclienthealthcheckcli.listener.QueueListenerImpl;
+import org.verapdf.webapp.queueclienthealthcheckcli.handler.QueueSenderHandlerImpl;
+import org.verapdf.webapp.queueclienthealthcheckcli.listener.QueueListenerHandlerImpl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,15 +30,15 @@ public class QueueClientHealthcheckCliApplication {
 	private static ConfigurableApplicationContext context;
 
 	private QueueSender queueSender;
-	private QueueListenerImpl queueListener;
-	private SendingErrorCallbackToQueueHandlerImpl handler;
+	private QueueListenerHandlerImpl queueListener;
+	private QueueSenderHandlerImpl handler;
 
 	private Set<String> sentMessages = new HashSet<>();
 
 	@Autowired
 	public QueueClientHealthcheckCliApplication(QueueSender queueSender,
-	                                            QueueListenerImpl queueListener,
-	                                            SendingErrorCallbackToQueueHandlerImpl handler) {
+	                                            QueueListenerHandlerImpl queueListener,
+	                                            QueueSenderHandlerImpl handler) {
 		this.queueSender = queueSender;
 		this.queueListener = queueListener;
 		this.handler = handler;
@@ -53,7 +53,7 @@ public class QueueClientHealthcheckCliApplication {
 			sentMessages.add(jobId);
 		}
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(6000);
 		} catch (InterruptedException e) {
 			LOGGER.info("Caught exception while waiting for sending all jobsId to sender.");
 		}
@@ -68,8 +68,8 @@ public class QueueClientHealthcheckCliApplication {
 	}
 
 	private static int checkCorrectSendingAndReceivingJobs(Set<String> allSentMessages,
-	                                               Set<String> sentSuccessfulMessages,
-	                                               Set<String> sentUnsuccessfulMessages) {
+	                                                       Set<String> sentSuccessfulMessages,
+	                                                       Set<String> sentUnsuccessfulMessages) {
 		Set<String> receivedMessages = new HashSet <>(sentSuccessfulMessages);
 		receivedMessages.addAll(sentUnsuccessfulMessages);
 

@@ -8,6 +8,7 @@
         <module>job-service</module>
         <module>local-storage-service</module>
         <module>queue-client</module>
+        <module>worker</module>
     </modules>
 
     <parent>

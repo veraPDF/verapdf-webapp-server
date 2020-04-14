@@ -1,57 +1,75 @@
 package org.verapdf.webapp.queueclient.sender;
 
-import org.springframework.amqp.core.MessageDeliveryMode;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
 import org.verapdf.webapp.queueclient.entity.QueueErrorEventType;
-import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorEvent;
-import org.verapdf.webapp.queueclient.handler.SendingToQueueErrorEventHandler;
+import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorData;
+import org.verapdf.webapp.queueclient.handler.QueueSenderErrorEventHandler;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-@Service
 public class QueueSender {
 
+	private final String sendingQueueName;
 	private final RabbitTemplate rabbitTemplate;
-	private final String defaultQueueName;
-	private final List<SendingToQueueErrorEventHandler> sendingToQueueErrorEventHandlers;
-	private final ApplicationEventPublisher publisher;
+	private final List<QueueSenderErrorEventHandler> sendingErrorEventHandlers = new ArrayList<>();
 
-	public QueueSender(RabbitTemplate rabbitTemplate,
-	                   @Qualifier("defaultQueue") Queue queue,
-	                   ApplicationEventPublisher publisher,
-	                   List<SendingToQueueErrorEventHandler> sendingToQueueErrorEventHandlers) {
+	public QueueSender(String sendingQueueName,
+	                   DataSize sendingQueueSize,
+	                   RabbitTemplate rabbitTemplate,
+	                   AmqpAdmin amqpAdmin,
+	                   List<QueueSenderErrorEventHandler> queueSenderErrorEventHandlers) {
+		setUpRabbit(sendingQueueName, sendingQueueSize, rabbitTemplate, amqpAdmin);
+		this.sendingQueueName = sendingQueueName;
 		this.rabbitTemplate = rabbitTemplate;
-		this.defaultQueueName = queue.getName();
-		this.publisher = publisher;
-		this.sendingToQueueErrorEventHandlers = sendingToQueueErrorEventHandlers;
+		if (queueSenderErrorEventHandlers != null) {
+			this.sendingErrorEventHandlers.addAll(queueSenderErrorEventHandlers);
+		}
 	}
 
 	public void sendMessage(String message) {
 		try {
-			CorrelationData correlationData = new CorrelationData(defaultQueueName);
-			rabbitTemplate.convertAndSend(defaultQueueName, message,
+			CorrelationData correlationData = new CorrelationData(sendingQueueName);
+			rabbitTemplate.convertAndSend(sendingQueueName, message,
 					rabbitMessage -> {
 						rabbitMessage.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
 						correlationData.setReturnedMessage(rabbitMessage);
 						return rabbitMessage;
 					}, correlationData);
 		} catch (Exception e) {
-			publisher.publishEvent(new SendingToQueueErrorEvent(
+			handleSendToQueueError(new SendingToQueueErrorData(sendingQueueName,
 					message, QueueErrorEventType.SENDING_EXCEPTION, e.getMessage(), e));
 		}
 	}
 
-	@EventListener
-	public final void handleSendToQueueError(SendingToQueueErrorEvent event) {
-		for (SendingToQueueErrorEventHandler handler : sendingToQueueErrorEventHandlers) {
-			handler.handleEvent(event);
+	private void handleSendToQueueError(SendingToQueueErrorData errorData) {
+		for (QueueSenderErrorEventHandler handler : sendingErrorEventHandlers) {
+			handler.handleEvent(errorData);
 		}
+	}
+
+	private void setUpRabbit(String sendingQueueName, DataSize sendingQueueSize,
+	                         RabbitTemplate rabbitTemplate, AmqpAdmin amqpAdmin) {
+		rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+			if (!ack && correlationData != null) {
+				Message returnedMessage = correlationData.getReturnedMessage();
+				if (returnedMessage != null) {
+					String message = new String(correlationData.getReturnedMessage().getBody());
+					handleSendToQueueError(new SendingToQueueErrorData(
+							correlationData.getId(), message,
+							QueueErrorEventType.SENDING_ERROR_CALLBACK,
+							cause, null));
+				}
+			}
+		});
+
+		amqpAdmin.declareQueue(QueueBuilder
+				.durable(sendingQueueName)
+				.overflow(QueueBuilder.Overflow.rejectPublish)
+				.maxLengthBytes((int) sendingQueueSize.toBytes())
+				.build());
 	}
 }

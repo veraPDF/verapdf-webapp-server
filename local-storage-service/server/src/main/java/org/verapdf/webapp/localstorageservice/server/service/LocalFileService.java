@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
 import org.verapdf.webapp.localstorageservice.server.error.exception.LowDiskSpaceException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
-import org.verapdf.webapp.localstorageservice.server.tool.FilesTool;
+import org.verapdf.webapp.tool.FilesTool;
 
 import java.io.File;
 import java.io.FileNotFoundException;
