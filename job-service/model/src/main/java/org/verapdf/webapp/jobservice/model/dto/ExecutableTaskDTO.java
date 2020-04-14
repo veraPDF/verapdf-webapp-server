@@ -1,6 +1,6 @@
-package org.verapdf.webapp.model.dto;
+package org.verapdf.webapp.jobservice.model.dto;
 
-import org.verapdf.webapp.model.entity.enums.Profile;
+import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 
 import java.util.Objects;
 import java.util.UUID;

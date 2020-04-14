@@ -1,4 +1,4 @@
-package org.verapdf.webapp.model.entity.enums;
+package org.verapdf.webapp.jobservice.model.entity.enums;
 
 public enum Profile {
 	TAGGED_PDF("Tagged PDF"),
