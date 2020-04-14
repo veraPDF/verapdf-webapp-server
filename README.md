@@ -8,9 +8,17 @@ JDK 11, Maven, Docker
 
 **Build sources**
 
+You can use your local Maven installation to build project sources:
 ```
 mvn clean install
 ```
+
+Alternatively you can use a docker maven image.
+For that you need first initialize the volume to re-use maven repo between runs:
+```
+.bin/init.sh
+```
+After that you can use `.bin/build-all.sh` script to run actual building. 
 
 ## Running in Docker
 
