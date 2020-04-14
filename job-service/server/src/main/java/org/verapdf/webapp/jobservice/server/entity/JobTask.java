@@ -90,6 +90,20 @@ public class JobTask {
 		this.job = job;
 	}
 
+	public void setSuccessfulResult(UUID resultFileId) {
+		this.status = TaskStatus.FINISHED;
+		this.errorType = null;
+		this.errorMessage = null;
+		this.resultFileId = resultFileId;
+	}
+
+	public void setErrorResult(TaskError taskError, String errorMessage) {
+		this.status = TaskStatus.ERROR;
+		this.errorType = taskError;
+		this.errorMessage = errorMessage;
+		this.resultFileId = null;
+	}
+
 	@Embeddable
 	public static class JobEntryId implements Serializable {
 		private UUID fileId;
