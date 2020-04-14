@@ -1,0 +1,13 @@
+{
+  "details":
+  {
+    "passedRules":1,
+    "failedRules":0,
+    "passedChecks":1,
+    "failedChecks":0,
+    "ruleSummaries":[]
+  },
+  "profileName":"WCAG 2.1 validation profile",
+  "statement":"PDF file is compliant with Validation Profile requirements.",
+  "compliant":true
+}

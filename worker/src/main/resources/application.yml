@@ -1,0 +1,25 @@
+spring:
+  rabbitmq:
+    host: ${AMQP_SERVER_HOST}
+    username: ${AMQP_USER}
+    password: ${AMQP_PASSWORD}
+    listener:
+      simple:
+        concurrency: ${AMQP_SERVER_CONCURRENCY}
+        max-concurrency: ${AMQP_SERVER_MAX_CONCURRENCY}
+        prefetch: 1
+    publisher-confirm-type: correlated
+
+verapdf:
+  rabbitmq:
+    queues:
+      result-queue:
+        name: ${AMQP_SERVER_SENDING_QUEUE_NAME}
+        max-size: ${AMQP_SERVER_SENDING_QUEUE_MAX_SIZE}
+      listening-queue:
+        name: ${AMQP_SERVER_LISTENING_QUEUE_NAME}
+        max-size: ${AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE}
+  files:
+    worker-dir: /opt/verapdf/worker/files/
+  local-storage-service:
+    uri: http://${FILE_STORAGE_HOST}:${FILE_STORAGE_PORT}/api

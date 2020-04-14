@@ -1,0 +1,13 @@
+{
+  "details":
+  {
+    "passedRules":1282,
+    "failedRules":0,
+    "passedChecks":2521,
+    "failedChecks":0,
+    "ruleSummaries":[]
+  },
+  "profileName":"Tagged pdf profile for PDF 1.7 specification",
+  "statement":"PDF file is compliant with Validation Profile requirements.",
+  "compliant":true
+}

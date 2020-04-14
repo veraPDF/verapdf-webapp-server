@@ -1,4 +1,4 @@
-package org.verapdf.webapp.localstorageservice.server.tool;
+package org.verapdf.webapp.tool;
 
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -30,8 +30,9 @@ public final class FilesTool {
 			}
 			String actualContentMD5 = evaluateMD5(fileToSave);
 			if (!expectedContentMD5.equals(actualContentMD5)) {
-				throw new BadRequestException("Expected file checksum doesn't match obtained file checksum. Expected: "
-				                              + actualContentMD5 + ", actual: " + expectedContentMD5);
+				throw new BadRequestException(
+						"Expected file checksum doesn't match obtained file checksum. Expected: "
+								+ actualContentMD5 + ", actual: " + expectedContentMD5);
 			}
 		} catch (Throwable e) {
 			deleteFile(fileToSave);

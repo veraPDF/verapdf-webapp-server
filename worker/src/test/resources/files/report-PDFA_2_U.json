@@ -1,0 +1,34 @@
+{
+  "details":
+  {
+    "passedRules":122,
+    "failedRules":1,
+    "passedChecks":229,
+    "failedChecks":1,
+    "ruleSummaries":
+    [
+      {
+        "ruleStatus":"FAILED",
+        "specification":"ISO 19005-2:2011",
+        "clause":"6.6.4",
+        "testNumber":2,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The value of pdfaid:part shall be the part number of ISO 19005 to which the file conforms.",
+        "object":"PDFAIdentification",
+        "test":"part == 2",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root/document[0]/metadata[0](4 0 obj PDMetadata)/XMPPackage[0]/Identification[0]"
+          }
+        ]
+      }
+    ]
+  },
+  "profileName":"PDF/A-2U validation profile",
+  "statement":"PDF file is not compliant with Validation Profile requirements.",
+  "compliant":false
+}

@@ -13,6 +13,7 @@ spring:
 
 verapdf:
   rabbitmq:
-    queue:
-      name: jobsQueueTest
-      max-size: 180B
+    queues:
+      listening-queue:
+        name: requestQueueTest
+        max-size: 180B

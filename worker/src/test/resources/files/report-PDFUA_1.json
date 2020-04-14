@@ -1,0 +1,91 @@
+{
+  "details":
+  {
+    "passedRules":44,
+    "failedRules":4,
+    "passedChecks":11,
+    "failedChecks":4,
+    "ruleSummaries":
+    [
+      {
+        "ruleStatus":"FAILED",
+        "specification":null,
+        "clause":"7.3",
+        "testNumber":1,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"Figure tags shall include an alternative representation or replacement text that represents the contents\n                marked with the Figure tag as noted in ISO 32000-1:2008, 14.7.2, Table 323",
+        "object":"SEFigure",
+        "test":"(Alt != null && Alt != '') || (ActualText != null && ActualText != '')",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root/document[0]/StructTreeRoot[0](6 0 obj PDStructTreeRoot)/K[0](11 0 obj SEDocument Document)/K[0](15 0 obj SEFigure Figure)"
+          }
+        ]
+      },
+      {
+        "ruleStatus":"FAILED",
+        "specification":null,
+        "clause":"5",
+        "testNumber":1,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The PDF/UA version and conformance level of a file shall be specified using the PDF/UA Identification extension schema.",
+        "object":"MainXMPPackage",
+        "test":"UAIdentification_size == 1",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root/document[0]/metadata[0](4 0 obj PDMetadata)/XMPPackage[0]"
+          }
+        ]
+      },
+      {
+        "ruleStatus":"FAILED",
+        "specification":null,
+        "clause":"7.1",
+        "testNumber":10,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The document catalog dictionary shall include a ViewerPreferences dictionary containing a DisplayDocTitle key, whose value shall be true.",
+        "object":"CosDocument",
+        "test":"DisplayDocTitle == true",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root"
+          }
+        ]
+      },
+      {
+        "ruleStatus":"FAILED",
+        "specification":null,
+        "clause":"7.1",
+        "testNumber":9,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The Metadata stream in the document's catalog dictionary shall contain a dc:title entry, where dc is the\n                recommended prefix for the Dublin Core metadata schema as defined in the XMP specification, which\n                clearly identifies the document.",
+        "object":"MainXMPPackage",
+        "test":"dc_title != null",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root/document[0]/metadata[0](4 0 obj PDMetadata)/XMPPackage[0]"
+          }
+        ]
+      }
+    ]
+  },
+  "profileName":"PDF/UA-1 validation profile",
+  "statement":"PDF file is not compliant with Validation Profile requirements.",
+  "compliant":false
+}

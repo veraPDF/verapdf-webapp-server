@@ -1,0 +1,52 @@
+{
+  "details":
+  {
+    "passedRules":126,
+    "failedRules":2,
+    "passedChecks":232,
+    "failedChecks":2,
+    "ruleSummaries":
+    [
+      {
+        "ruleStatus":"FAILED",
+        "specification":"ISO 19005-2:2011",
+        "clause":"6.6.4",
+        "testNumber":2,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The value of pdfaid:part shall be the part number of ISO 19005 to which the file conforms.",
+        "object":"PDFAIdentification",
+        "test":"part == 2",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root/document[0]/metadata[0](4 0 obj PDMetadata)/XMPPackage[0]/Identification[0]"
+          }
+        ]
+      },
+      {"ruleStatus":"FAILED",
+        "specification":"ISO 19005-2:2011",
+        "clause":"6.7.2",
+        "testNumber":1,
+        "status":"failed",
+        "passedChecks":0,
+        "failedChecks":1,
+        "description":"The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true.",
+        "object":"CosDocument",
+        "test":"Marked == true",
+        "checks":
+        [
+          {
+            "status":"failed",
+            "context":"root"
+          }
+        ]
+      }
+    ]
+  },
+  "profileName":"PDF/A-2A validation profile",
+  "statement":"PDF file is not compliant with Validation Profile requirements.",
+  "compliant":false
+}

@@ -1,0 +1,13 @@
+{
+  "details":
+  {
+    "passedRules":103,
+    "failedRules":0,
+    "passedChecks":254,
+    "failedChecks":0,
+    "ruleSummaries":[]
+  },
+  "profileName":"PDF/A-1B validation profile",
+  "statement":"PDF file is compliant with Validation Profile requirements.",
+  "compliant":true
+}
