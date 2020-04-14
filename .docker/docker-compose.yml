@@ -1,54 +1,60 @@
 version: '3.4'
 services:
-  local-storage-service-database:
-    build: ./database
-    restart: always
+  # File Storage
+  local-storage-database:
+    build: ./localstorage-db
     environment:
       POSTGRES_USER: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
       POSTGRES_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
       POSTGRES_DB: verapdfdb
     volumes:
         - type: volume
-          source: filestorage_database_data
+          source: localstorage_database_data
           target: /var/lib/postgresql/data
-  local-storage-service:
+    restart: always
+  file-storage:
     build: ../local-storage-service/server
     expose:
       - 8080
     depends_on:
-      - local-storage-service-database
+      - local-storage-database
     environment:
       LOCALSTORAGE_DATABASE_USERNAME: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
       LOCALSTORAGE_DATABASE_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
-      LOCALSTORAGE_DATABASE_DB: verapdfdb    # the same as in local-storage-service-database
-      LOCALSTORAGE_DATABASE_HOST: local-storage-service-database
+      LOCALSTORAGE_DATABASE_DB: verapdfdb    # the same as in file-storage-database
+      LOCALSTORAGE_DATABASE_HOST: local-storage-database
       LOCALSTORAGE_DATABASE_PORT: 5432
-      LOCALSTORAGE_DISK_MIN_SPACE_THRESHOLD: ${LOCAL_STORAGE_SERVICE_DISK_MIN_SPACE_THRESHOLD}
+      LOCALSTORAGE_DISK_MIN_SPACE_THRESHOLD: ${LOCAL_STORAGE_SERVICE_DISK_MIN_SPACE_THRESHOLD:-5GB}
       LOCALSTORAGE_MAX_FILE_SIZE: 100MB
       LOCALSTORAGE_MAX_REQUEST_SIZE: 101MB
     volumes:
       - type: volume
-        source: filestorage_server_files
+        source: localstorage_server_files
         target: /opt/verapdf/localstorageservice/files
     restart: always
+
+  # Job Service
   job-service:
     build: ../job-service/server
     expose:
       - 8080
     restart: always
 
-  rabbitmq:
-    build: ./rabbitmq
+  # Validation tasks queue
+  queue:
+    image: rabbitmq:3.8.3
+    expose:
+      - 5672
     restart: always
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_DEFAULT_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${AMQP_SERVER_USER}
+      RABBITMQ_DEFAULT_PASSWORD: ${AMQP_SERVER_PASSWORD}
     volumes:
       - type: volume
         source: rabbitmq_database_data
         target: /var/lib/rabbitmq/
 
 volumes:
-  filestorage_database_data:
-  filestorage_server_files:
+  localstorage_database_data:
+  localstorage_server_files:
   rabbitmq_database_data:

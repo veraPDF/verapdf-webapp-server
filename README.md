@@ -16,7 +16,7 @@ mvn clean install
 
 **Run service stack**
 ```
-cd ./docker
+cd .docker
 docker-compose up -d
 ```
 
@@ -26,7 +26,7 @@ To check service availability you can request service status endpoints described
 
 **Stop service stack**
 ```
-cd ./docker
+cd .docker
 docker-compose down
 ```
 
@@ -34,7 +34,7 @@ docker-compose down
 When working on new features it is useful to be able to launch individual services in your IDE directly. 
 To use your local services you can start the stack with `PROFILE=dev` environment variable:
 ```
-cd ./docker
+cd .docker
 env PROFILE=dev docker-compose up -d
 ```
 This will launch the nginx proxy with alternative configuration pointing to your services instead of those from 
