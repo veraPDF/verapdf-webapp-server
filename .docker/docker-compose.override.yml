@@ -9,5 +9,5 @@ services:
     ports:
       - 80:80
     depends_on:
-      - local-storage-service
+      - file-storage
       - job-service
