@@ -1,5 +1,8 @@
 package org.verapdf.webapp.jobservice.model.entity.enums;
 
 public enum JobStatus {
-	CREATED
+	CREATED,
+	PROCESSING,
+	FINISHED,
+	ERROR
 }

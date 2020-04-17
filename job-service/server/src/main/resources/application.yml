@@ -1,3 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${jobservice.database.host:localhost}:${jobservice.database.port:5432}/${jobservice.database.db:job_postgres}
+    username: ${jobservice.database.username}
+    password: ${jobservice.database.password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
 server:
   servlet:
     context-path: /api

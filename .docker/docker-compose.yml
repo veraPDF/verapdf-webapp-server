@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   # File Storage
-  local-storage-database:
+  file-storage-database:
     build: ./localstorage-db
     environment:
       POSTGRES_USER: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
@@ -17,12 +17,12 @@ services:
     expose:
       - 8080
     depends_on:
-      - local-storage-database
+      - file-storage-database
     environment:
       LOCALSTORAGE_DATABASE_USERNAME: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
       LOCALSTORAGE_DATABASE_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
       LOCALSTORAGE_DATABASE_DB: verapdfdb    # the same as in file-storage-database
-      LOCALSTORAGE_DATABASE_HOST: local-storage-database
+      LOCALSTORAGE_DATABASE_HOST: file-storage-database
       LOCALSTORAGE_DATABASE_PORT: 5432
       LOCALSTORAGE_DISK_MIN_SPACE_THRESHOLD: ${LOCAL_STORAGE_SERVICE_DISK_MIN_SPACE_THRESHOLD:-5GB}
       LOCALSTORAGE_MAX_FILE_SIZE: 100MB
@@ -34,10 +34,30 @@ services:
     restart: always
 
   # Job Service
+  job-service-database:
+    build: ./job-db
+    environment:
+      POSTGRES_USER: ${JOB_SERVICE_DATABASE_USER}
+      POSTGRES_PASSWORD: ${JOB_SERVICE_DATABASE_PASSWORD}
+      POSTGRES_DB: verapdfjobdb
+    volumes:
+    - type: volume
+      source: jobservice_database_data
+      target: /var/lib/postgresql/data
+    restart: always
+
   job-service:
     build: ../job-service/server
     expose:
       - 8080
+    depends_on:
+      - job-service-database
+    environment:
+      JOBSERVICE_DATABASE_USERNAME: ${JOB_SERVICE_DATABASE_USER}
+      JOBSERVICE_DATABASE_PASSWORD: ${JOB_SERVICE_DATABASE_PASSWORD}
+      JOBSERVICE_DATABASE_DB: verapdfjobdb    # the same as in job-service-database
+      JOBSERVICE_DATABASE_HOST: job-service-database
+      JOBSERVICE_DATABASE_PORT: 5432   # do we need to change port to avoid databases conflict on same port
     restart: always
 
   # Validation tasks queue
@@ -57,4 +77,5 @@ services:
 volumes:
   localstorage_database_data:
   localstorage_server_files:
+  jobservice_database_data:
   rabbitmq_database_data:
