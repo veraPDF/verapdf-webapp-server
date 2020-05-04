@@ -2,9 +2,11 @@ package org.verapdf.webapp.jobservice.server.mapper;
 
 import org.springframework.stereotype.Component;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
+import org.verapdf.webapp.jobservice.model.dto.JobTaskDTO;
 import org.verapdf.webapp.jobservice.server.entity.Job;
 import org.verapdf.webapp.jobservice.server.entity.JobTask;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ public class JobMapper {
 		if (jobTasks != null && !jobTasks.isEmpty()) {
 			res.setTasks(jobTasks.stream()
 			                     .map(jobTaskMapper::createDTOFromEntity)
+			                     .sorted(Comparator.comparing(JobTaskDTO::getFileId))
 			                     .collect(Collectors.toList()));
 		}
 		return res;
@@ -32,7 +35,20 @@ public class JobMapper {
 
 	public Job createEntityFromDTO(JobDTO jobDTO) {
 		Job res = new Job();
-		res.setProfile(jobDTO.getProfile());
+		updateEntityFromDTO(res, jobDTO);
 		return res;
+	}
+
+	public void updateEntityFromDTO(Job job, JobDTO jobDTO) {
+		job.setProfile(jobDTO.getProfile());
+
+		job.clearJobTasks();
+
+		List<JobTaskDTO> tasks = jobDTO.getTasks();
+		if (tasks != null && !tasks.isEmpty()) {
+			jobDTO.getTasks().stream()
+			      .map(jobTaskMapper::createEntityFromDTO)
+			      .forEach(job::addTask);
+		}
 	}
 }
