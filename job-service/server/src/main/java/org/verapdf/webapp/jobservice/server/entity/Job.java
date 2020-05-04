@@ -70,6 +70,10 @@ public class Job {
 		return jobTasks;
 	}
 
+	public void clearJobTasks() {
+		this.jobTasks.clear();
+	}
+
 	public void addTask(JobTask jobTask) {
 		assert jobTask.getSourceFor() == null;
 

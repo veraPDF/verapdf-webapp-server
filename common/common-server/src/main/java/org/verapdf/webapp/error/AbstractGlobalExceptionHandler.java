@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.verapdf.webapp.error.exception.BadRequestException;
+import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
 
 import javax.validation.ConstraintViolationException;
@@ -93,6 +94,14 @@ public abstract class AbstractGlobalExceptionHandler {
 
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, e.getMessage()));
+	}
+
+	@ExceptionHandler({ConflictException.class})
+	public ResponseEntity<ErrorDTO> handleException(ConflictException e) {
+		getLogger().info("Conflict exception: {}", e.getMessage());
+
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+		                     .body(new ErrorDTO(HttpStatus.CONFLICT, e.getMessage()));
 	}
 
 	@ExceptionHandler({NotFoundException.class})
