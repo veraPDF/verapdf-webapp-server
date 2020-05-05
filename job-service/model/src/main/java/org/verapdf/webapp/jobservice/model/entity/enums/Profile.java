@@ -8,11 +8,11 @@ public enum Profile {
 	PDFA_1_A("PDF/A-1A"),
 	PDFA_1_B("PDF/A-1B"),
 	PDFA_2_A("PDF/A-2A"),
-	PDFA_2_B("PDF/A-2B"),
 	PDFA_2_U("PDF/A-2U"),
+	PDFA_2_B("PDF/A-2B"),
 	PDFA_3_A("PDF/A-3A"),
-	PDFA_3_B("PDF/A-3B"),
 	PDFA_3_U("PDF/A-3U"),
+	PDFA_3_B("PDF/A-3B"),
 	PDFA_AUTO("PDF/A Auto-detect");
 
 	private String humanReadableName;
@@ -24,4 +24,5 @@ public enum Profile {
 	public String getHumanReadableName() {
 		return humanReadableName;
 	}
+
 }
