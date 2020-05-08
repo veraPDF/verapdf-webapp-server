@@ -3,6 +3,7 @@ package org.verapdf.webapp.error;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +14,8 @@ import org.verapdf.webapp.error.exception.BadRequestException;
 import org.verapdf.webapp.error.exception.NotFoundException;
 
 import javax.validation.ConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class AbstractGlobalExceptionHandler {
@@ -20,6 +23,7 @@ public abstract class AbstractGlobalExceptionHandler {
 	@ExceptionHandler
 	public ResponseEntity<ErrorDTO> handleException(Throwable e) {
 		getLogger().error("Caught by " + this.getClass().getName(), e);
+
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 		                     .body(new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR));
 	}
@@ -30,6 +34,7 @@ public abstract class AbstractGlobalExceptionHandler {
 		                                                            .stream()
 		                                                            .map(c -> c.getPropertyPath().toString())
 		                                                            .collect(Collectors.joining(", ")));
+
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
 	}
@@ -37,20 +42,31 @@ public abstract class AbstractGlobalExceptionHandler {
 	@ExceptionHandler({MethodArgumentTypeMismatchException.class})
 	public ResponseEntity<ErrorDTO> handleException(MethodArgumentTypeMismatchException e) {
 		getLogger().info("Request parameter value is invalid: {}", e.getName());
+
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
 	}
 
-	@ExceptionHandler({MethodArgumentNotValidException.class})
-	public ResponseEntity<ErrorDTO> handleException(MethodArgumentNotValidException e) {
-		getLogger().info("Request parameter value is invalid: {}", e.getBindingResult());
+	@ExceptionHandler
+	public ResponseEntity<ErrorWithInvalidFieldsDTO> handleException(MethodArgumentNotValidException e) {
+		getLogger().info("Some of the request parameter fields are invalid: {}", e.getMessage());
+
+		Map<String, Object> invalidFields = new HashMap<>();
+		e.getBindingResult().getFieldErrors().forEach(fieldError -> {
+			invalidFields.put(fieldError.getField(), fieldError.getRejectedValue());
+		});
+
+		ErrorWithInvalidFieldsDTO errorWithInvalidFieldsDTO = new ErrorWithInvalidFieldsDTO(HttpStatus.BAD_REQUEST,
+		                                                                                    "Invalid arguments",
+		                                                                                    invalidFields);
 		return ResponseEntity.badRequest()
-		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
+		                     .body(errorWithInvalidFieldsDTO);
 	}
 
 	@ExceptionHandler({MissingServletRequestParameterException.class})
 	public ResponseEntity<ErrorDTO> handleException(MissingServletRequestParameterException e) {
 		getLogger().info("Required request parameter missing: {}", e.getParameterName());
+
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
 	}
@@ -58,13 +74,23 @@ public abstract class AbstractGlobalExceptionHandler {
 	@ExceptionHandler({MissingServletRequestPartException.class})
 	public ResponseEntity<ErrorDTO> handleException(MissingServletRequestPartException e) {
 		getLogger().info("Required request part missing: {}", e.getRequestPartName());
+
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
+	}
+
+	@ExceptionHandler
+	public ResponseEntity<ErrorDTO> handleException(HttpMessageNotReadableException e) {
+		getLogger().info("Some of the request parameter fields are invalid: {}", e.getMessage());
+
+		return ResponseEntity.badRequest()
+		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, "Argument parsing failed"));
 	}
 
 	@ExceptionHandler({BadRequestException.class})
 	public ResponseEntity<ErrorDTO> handleException(BadRequestException e) {
 		getLogger().info("Bad request: {}", e.getMessage());
+
 		return ResponseEntity.badRequest()
 		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, e.getMessage()));
 	}
