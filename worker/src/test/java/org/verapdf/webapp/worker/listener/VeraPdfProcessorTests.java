@@ -3,7 +3,6 @@ package org.verapdf.webapp.worker.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.JsonExpectationsHelper;
 import org.verapdf.processor.reports.ValidationReport;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
@@ -45,7 +43,7 @@ public class VeraPdfProcessorTests {
 	public static File tempDir;
 
 	@ParameterizedTest
-	@EnumSource(value = Profile.class, names = {"PDFUA_1_MACHINE"}, mode = EnumSource.Mode.EXCLUDE)
+	@EnumSource(value = Profile.class)
 	public void testingValidationWithAllProfilesOnValidateTest(Profile profile) throws VeraPDFProcessingException, IOException, JSONException {
 		Path fileToValidatePath
 				= Files.createTempFile(tempDir.toPath(), "file_to_validate", "");
@@ -58,21 +56,6 @@ public class VeraPdfProcessorTests {
 				= veraPDFProcessor.validate(fileToValidatePath.toFile(), profile);
 		String validationReportAsJson = writeValidationReportAsJson(validationReport);
 		JSONAssert.assertEquals(expectedReportAsString, validationReportAsJson, false);
-	}
-
-	@ParameterizedTest
-	@EnumSource(value = Profile.class, names = {"PDFUA_1_MACHINE"})
-	public void testingValidationWithMissingProfilesOnValidateTest(Profile profile) throws IOException {
-		Path fileToValidatePath
-				= Files.createTempFile(tempDir.toPath(), "file_to_validate", "");
-		FileUtils.copyToFile(
-				getClass().getResourceAsStream("/files/veraPDFTestSuite.pdf"),
-				fileToValidatePath.toFile());
-		VeraPDFProcessingException exception
-				= Assertions.assertThrows(VeraPDFProcessingException.class,
-				() -> veraPDFProcessor.validate(fileToValidatePath.toFile(), profile));
-		Assertions.assertEquals("Missing validation profile for " + profile,
-				exception.getMessage());
 	}
 
 	private String writeValidationReportAsJson(ValidationReport validationReport) {
