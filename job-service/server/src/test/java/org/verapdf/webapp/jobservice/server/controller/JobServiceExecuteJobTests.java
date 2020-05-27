@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class JobServiceJobExecutionTests {
+public class JobServiceExecuteJobTests {
 	@Autowired
 	private MockMvc mockMvc;
 
