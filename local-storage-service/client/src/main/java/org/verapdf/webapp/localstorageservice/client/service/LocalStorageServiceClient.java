@@ -5,7 +5,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.verapdf.webapp.localstorageservice.model.dto.StoredFileDTO;
@@ -92,13 +91,19 @@ public class LocalStorageServiceClient {
 	 * 	or incorrect type of parameters for used path.
 	 *  500 INTERNAL_SERVER_ERROR - internal server error.
 	 */
-	public StoredFileDTO saveFile(File fileToSave, String fileChecksum) {
+	public StoredFileDTO saveFile(File fileToSave, String fileChecksum, MediaType fileMediaType) {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
+		HttpHeaders fileHeaders = new HttpHeaders();
+		fileHeaders.setContentType(fileMediaType);
+
+		HttpEntity<FileSystemResource> fileEntity = new HttpEntity<>(
+				new FileSystemResource(fileToSave), fileHeaders);
+
 		//For content type "multipart/form-data" the MultiValueMap is required
 		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new FileSystemResource(fileToSave));
+		body.add("file", fileEntity);
 		body.add("contentMD5", fileChecksum);
 
 		HttpEntity<MultiValueMap<String, Object>> requestEntity
