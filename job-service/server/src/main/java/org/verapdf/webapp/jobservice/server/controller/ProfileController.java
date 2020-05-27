@@ -13,23 +13,24 @@ import java.util.List;
 @RequestMapping("/profiles")
 public class ProfileController {
 
-	private List<ProfileDTO> profiles = new ArrayList<>();
+	private final List<ProfileDTO> profiles;
 
 	public ProfileController() {
-		this.profiles.add(new ProfileDTO(Profile.TAGGED_PDF, true, true));
-		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_MACHINE, false, true));
-		this.profiles.add(new ProfileDTO(Profile.PDFUA_1, true, true));
-		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1, true, true));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_1_A, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_1_B, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_2_A, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_2_U, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_2_B, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_3_A, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_3_U, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_3_B, true, false));
-		this.profiles.add(new ProfileDTO(Profile.PDFA_AUTO, true, false));
-
+		this.profiles = new ArrayList<>();
+		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1_COMPLETE, true));
+		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1, true));
+		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_MACHINE, true));
+		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_HUMAN, true));
+		this.profiles.add(new ProfileDTO(Profile.TAGGED_PDF, true));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_1_A, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_1_B, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_2_A, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_2_U, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_2_B, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_3_A, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_3_U, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_3_B, false));
+		this.profiles.add(new ProfileDTO(Profile.PDFA_AUTO, false));
 	}
 
 	@GetMapping

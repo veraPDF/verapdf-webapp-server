@@ -27,13 +27,13 @@ public class ProfileMapperTests {
 	private QueueListener queueListener;
 
 	@ParameterizedTest
-	@EnumSource(value = Profile.class, names = {"PDFA_AUTO", "PDFUA_1_MACHINE"}, mode = EnumSource.Mode.EXCLUDE)
+	@EnumSource(value = Profile.class, names = {"PDFA_AUTO"}, mode = EnumSource.Mode.EXCLUDE)
 	public void checkExistenceOfAllProfiles(Profile profile) {
 		Assertions.assertNotNull(profileMapper.getValidationProfile(profile));
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = Profile.class, names = {"PDFA_AUTO", "PDFUA_1_MACHINE"})
+	@EnumSource(value = Profile.class, names = {"PDFA_AUTO"})
 	public void checkMissingProfiles(Profile profile) {
 		Assertions.assertNull(profileMapper.getValidationProfile(profile));
 	}

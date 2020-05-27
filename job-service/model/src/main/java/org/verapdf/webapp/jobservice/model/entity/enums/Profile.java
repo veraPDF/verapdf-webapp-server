@@ -3,8 +3,9 @@ package org.verapdf.webapp.jobservice.model.entity.enums;
 public enum Profile {
 	TAGGED_PDF("Tagged PDF"),
 	PDFUA_1_MACHINE("PDF/UA-1 (Machine)"),
-	PDFUA_1("PDF/UA-1"),
-	WCAG_2_1("WCAG 2.1"),
+	PDFUA_1_HUMAN("PDF/UA-1 (Human)"),
+	WCAG_2_1("WCAG 2.1 (Extra)"),
+	WCAG_2_1_COMPLETE("WCAG 2.1 (All)"),
 	PDFA_1_A("PDF/A-1A"),
 	PDFA_1_B("PDF/A-1B"),
 	PDFA_2_A("PDF/A-2A"),
