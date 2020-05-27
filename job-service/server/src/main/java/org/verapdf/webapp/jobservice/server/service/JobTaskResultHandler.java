@@ -25,7 +25,7 @@ import java.util.UUID;
 @Service
 public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderErrorEventHandler {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobTaskResultHandler.class);
 
 	private final JobRepository jobRepository;
 	private final JobTaskRepository taskRepository;

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.verapdf.processor.reports.ValidationReport;
@@ -133,7 +134,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			objectMapper.writeValue(reportFile, validationReport);
 
 			return localStorageServiceClient
-					.saveFile(reportFile, FilesTool.evaluateMD5(reportFile));
+					.saveFile(reportFile, FilesTool.evaluateMD5(reportFile), MediaType.APPLICATION_JSON);
 		} catch (RestClientResponseException e) {
 			throw new VeraPDFWorkerException(
 					TaskError.SAVE_RESULT_FILE_ERROR,

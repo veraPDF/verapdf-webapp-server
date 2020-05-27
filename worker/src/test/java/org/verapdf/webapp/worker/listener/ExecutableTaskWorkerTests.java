@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestClientResponseException;
 import org.verapdf.webapp.localstorageservice.client.service.LocalStorageServiceClient;
@@ -76,7 +77,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.doReturn(createReportFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -89,8 +90,8 @@ public class ExecutableTaskWorkerTests {
 
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
-		Mockito.verify(localStorageServiceClient).saveFile(
-				any(File.class),eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
+				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -418,7 +419,7 @@ public class ExecutableTaskWorkerTests {
 				"internal exception during saving file report".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -434,7 +435,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -455,7 +456,7 @@ public class ExecutableTaskWorkerTests {
 				"incorrect parameters".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -471,7 +472,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -491,7 +492,7 @@ public class ExecutableTaskWorkerTests {
 				HttpStatus.REQUEST_TIMEOUT.value(), "", null, "request timeout".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -507,7 +508,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"));
+				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
