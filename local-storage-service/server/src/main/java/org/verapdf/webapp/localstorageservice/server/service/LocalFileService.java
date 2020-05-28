@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
@@ -46,8 +47,8 @@ public class LocalFileService {
 		return new FileSystemResource(fileOnDisk);
 	}
 
-	public String saveFileOnDisk(InputStream inputStream, String fileName,
-	                             String expectedContentMD5) throws IOException, VeraPDFBackendException {
+	public Pair<String, String> saveFileOnDisk(InputStream inputStream, String fileName,
+	                                           String expectedContentMD5) throws IOException, VeraPDFBackendException {
 		checkNewFileAvailability();
 		return saveFile(inputStream, fileName, expectedContentMD5);
 	}
@@ -80,13 +81,13 @@ public class LocalFileService {
 		return res;
 	}
 
-	private String saveFile(InputStream inputStream, String fileName,
-	                        String expectedContentMD5) throws VeraPDFBackendException, IOException {
+	private Pair<String, String> saveFile(InputStream inputStream, String fileName,
+	                                      String expectedContentMD5) throws VeraPDFBackendException, IOException {
 		File dirToSaveFile = getDirToSaveFile();
 		File toSave = new File(dirToSaveFile, fileName);
+		String actualContentMD5 = FilesTool.saveFileOnDiskAndCheck(inputStream, toSave, expectedContentMD5);
 
-		FilesTool.saveFileOnDiskAndCheck(inputStream, toSave, expectedContentMD5);
-		return this.fileBaseDir.toPath().relativize(toSave.toPath()).toString();
+		return Pair.of(this.fileBaseDir.toPath().relativize(toSave.toPath()).toString(), actualContentMD5);
 	}
 
 	private File getDirToSaveFile() {

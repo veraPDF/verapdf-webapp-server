@@ -6,6 +6,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,12 +56,13 @@ public class StoredFileService {
 
 	@Transactional
 	public StoredFileDTO saveStoredFile(MultipartFile file, String expectedChecksum) throws VeraPDFBackendException {
-		StoredFile storedFile = constructStoredFile(file, expectedChecksum);
+		StoredFile storedFile = constructStoredFile(file);
 		StoredFile savedStoredFile = storedFileRepository.saveAndFlush(storedFile);
-		String localFilePath;
+		Pair<String, String> localPathAndFileContentMD5;
 		try {
 			try (InputStream is = file.getInputStream()) {
-				localFilePath = localFileService.saveFileOnDisk(is, storedFile.getId().toString(), expectedChecksum);
+				localPathAndFileContentMD5 = localFileService.saveFileOnDisk(is,
+						storedFile.getId().toString(), expectedChecksum);
 			} catch (IOException e) {
 				throw new VeraPDFBackendException("Error saving file on disk.", e);
 			}
@@ -68,7 +70,8 @@ public class StoredFileService {
 			storedFileRepository.delete(savedStoredFile);
 			throw e;
 		}
-		savedStoredFile.setLocalPath(localFilePath);
+		savedStoredFile.setLocalPath(localPathAndFileContentMD5.getFirst());
+		savedStoredFile.setContentMD5(localPathAndFileContentMD5.getSecond());
 		return storedFileMapper.createDTOFromEntity(savedStoredFile);
 	}
 
@@ -80,7 +83,7 @@ public class StoredFileService {
 		storedFileRepository.deleteAllByCreatedAtLessThan(expiredTime);
 	}
 
-	private StoredFile constructStoredFile(MultipartFile file, String expectedChecksum) throws BadRequestException {
+	private StoredFile constructStoredFile(MultipartFile file) throws BadRequestException {
 		String contentType = file.getContentType();
 		if (contentType != null) {
 			try {
@@ -89,7 +92,7 @@ public class StoredFileService {
 				throw new BadRequestException("Content type can not be parsed: " + contentType);
 			}
 		}
-		return new StoredFile(null, expectedChecksum, contentType, file.getSize(), file.getOriginalFilename());
+		return new StoredFile(null, null, contentType, file.getSize(), file.getOriginalFilename());
 	}
 
 	private StoredFile findStoredFileById(UUID fileId) throws NotFoundException {
