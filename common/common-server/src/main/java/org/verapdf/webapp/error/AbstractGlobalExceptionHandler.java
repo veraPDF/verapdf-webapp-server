@@ -26,18 +26,20 @@ public abstract class AbstractGlobalExceptionHandler {
 		getLogger().error("Caught by " + this.getClass().getName(), e);
 
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		                     .body(new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR));
+		                     .body(new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()));
 	}
 
 	@ExceptionHandler({ConstraintViolationException.class})
 	public ResponseEntity<ErrorDTO> handleException(ConstraintViolationException e) {
-		getLogger().info("Request parameter value is invalid: {}", e.getConstraintViolations()
-		                                                            .stream()
-		                                                            .map(c -> c.getPropertyPath().toString())
-		                                                            .collect(Collectors.joining(", ")));
+		String errorMessage = "Request parameter value is invalid: "
+				+ e.getConstraintViolations()
+				.stream()
+				.map(c -> c.getPropertyPath().toString())
+				.collect(Collectors.joining(", "));
+		getLogger().info(errorMessage);
 
 		return ResponseEntity.badRequest()
-		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST));
+		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, errorMessage));
 	}
 
 	@ExceptionHandler({MethodArgumentTypeMismatchException.class})
@@ -85,7 +87,7 @@ public abstract class AbstractGlobalExceptionHandler {
 		getLogger().info("Some of the request parameter fields are invalid: {}", e.getMessage());
 
 		return ResponseEntity.badRequest()
-		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, "Argument parsing failed"));
+		                     .body(new ErrorDTO(HttpStatus.BAD_REQUEST, e.getMessage()));
 	}
 
 	@ExceptionHandler({BadRequestException.class})

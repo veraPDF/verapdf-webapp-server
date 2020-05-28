@@ -20,6 +20,7 @@ import org.verapdf.webapp.error.exception.NotFoundException;
 import org.verapdf.webapp.localstorageservice.server.entity.StoredFile;
 import org.verapdf.webapp.localstorageservice.server.repository.StoredFileRepository;
 
+import javax.validation.ConstraintViolationException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
@@ -279,6 +280,77 @@ public class LocalStorageServiceTests {
 	}
 
 	@Test
+	public void uploadGetDownloadWithMissingChecksumTest() throws Exception {
+		MockMultipartFile mockFile = new MockMultipartFile("file", "testFileName.pdf", MediaType.APPLICATION_PDF_VALUE, FILE);
+
+		//Uploading file
+		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
+				.file(mockFile))
+				.andExpect(status().isCreated())
+				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(jsonPath("$.id").isNotEmpty())
+				.andExpect(jsonPath("$.fileName").value("testFileName.pdf"))
+				.andExpect(jsonPath("$.contentType").value(MediaType.APPLICATION_PDF_VALUE))
+				.andExpect(jsonPath("$.contentSize").value(10))
+				.andExpect(jsonPath("$.contentMD5").value("a8fc9834e7fef8d2b996020825133a55"))
+				.andReturn();
+		//Retrieving fileID
+		String jsonResponse = uploadResult.getResponse().getContentAsString();
+		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
+
+		//Retrieving storedFile data
+		mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
+				.accept(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(content().json("{'id':'" + uploadedFileId + "'," +
+						"'contentMD5':'a8fc9834e7fef8d2b996020825133a55'," +
+						"'contentType':'application/pdf'," +
+						"'contentSize':10," +
+						"'fileName':'testFileName.pdf'}", true));
+
+		//Downloading file
+		MvcResult downloadResult = mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
+				.accept(MediaType.ALL_VALUE))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE))
+				.andReturn();
+
+		byte[] resultedFile = downloadResult.getResponse().getContentAsByteArray();
+		assertArrayEquals(FILE, resultedFile);
+	}
+
+	@Test
+	public void uploadWithIncorrectPatternOfChecksumTest() throws Exception {
+		MockMultipartFile mockFile =
+				new MockMultipartFile("file", "testFileName.pdf", MediaType.APPLICATION_JSON_VALUE, FILE);
+		MockMultipartFile mockChecksumPart = new MockMultipartFile(
+				"contentMD5",
+				"",
+				"text/plain",
+				"Incorrect checksum part".getBytes(StandardCharsets.UTF_8));
+
+		//Uploading file
+		Exception resolvedException = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
+				.file(mockFile)
+				.file(mockChecksumPart))
+				.andExpect(status().isBadRequest())
+				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+				.andExpect(jsonPath("$.message").value("Request parameter value is invalid: uploadFile.contentMD5"))
+				.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+				.andExpect(jsonPath("$.timestamp").isNotEmpty())
+				.andReturn().getResolvedException();
+
+		assertNotNull(resolvedException);
+		assertEquals(ConstraintViolationException.class, resolvedException.getClass());
+		assertEquals("uploadFile.contentMD5: must match \"^[\\da-fA-F]{32}$\"", resolvedException.getMessage());
+	}
+
+	@Test
 	public void uploadWithUnparseableContentTypeTest() throws Exception {
 		MockMultipartFile mockFile =
 				new MockMultipartFile("file", "testFileName.pdf", "unparseable content type", FILE);
@@ -395,7 +467,7 @@ public class LocalStorageServiceTests {
 		                                     .andExpect(status().isInternalServerError())
 		                                     .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                     .andExpect(jsonPath("$.error").value(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()))
-		                                     .andExpect(jsonPath("$.message").isEmpty())
+		                                     .andExpect(jsonPath("$.message").value("Cannot find file on disk"))
 		                                     .andExpect(jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
 		                                     .andExpect(jsonPath("$.timestamp").isNotEmpty())
 		                                     .andReturn().getResolvedException();

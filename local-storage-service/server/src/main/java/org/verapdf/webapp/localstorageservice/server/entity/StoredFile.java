@@ -14,7 +14,7 @@ public class StoredFile {
 	private UUID id;
 	@Column(name = "local_path")
 	private String localPath;
-	@Column(name = "content_md5", nullable = false)
+	@Column(name = "content_md5")
 	private String contentMD5;
 	@Column(name = "content_type", nullable = false)
 	private String contentType;
@@ -56,6 +56,10 @@ public class StoredFile {
 
 	public String getContentMD5() {
 		return contentMD5;
+	}
+
+	public void setContentMD5(String contentMD5) {
+		this.contentMD5 = contentMD5;
 	}
 
 	public String getContentType() {

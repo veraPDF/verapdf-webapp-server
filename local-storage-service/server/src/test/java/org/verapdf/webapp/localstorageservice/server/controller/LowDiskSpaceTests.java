@@ -46,7 +46,7 @@ public class LowDiskSpaceTests {
 		                                     .andExpect(status().isInternalServerError())
 		                                     .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
 		                                     .andExpect(jsonPath("$.error").value(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()))
-		                                     .andExpect(jsonPath("$.message").isEmpty())
+		                                     .andExpect(jsonPath("$.message").value("Low disk space"))
 		                                     .andExpect(jsonPath("$.status").value(HttpStatus.INTERNAL_SERVER_ERROR.value()))
 		                                     .andExpect(jsonPath("$.timestamp").isNotEmpty())
 		                                     .andReturn().getResolvedException();

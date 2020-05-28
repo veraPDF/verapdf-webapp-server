@@ -157,8 +157,7 @@ public class JobServiceCreateJobTests {
 		                                     .andExpect(status().isBadRequest())
 		                                     .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                     .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
-		                                     .andExpect(jsonPath("$.message")
-				                                                .value("Argument parsing failed"))
+		                                     .andExpect(jsonPath("$.message").isNotEmpty())
 		                                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
 		                                     .andExpect(jsonPath("$.timestamp").isNotEmpty())
 		                                     .andReturn().getResolvedException();
