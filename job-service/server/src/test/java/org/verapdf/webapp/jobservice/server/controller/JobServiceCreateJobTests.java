@@ -16,18 +16,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.verapdf.webapp.error.exception.NotFoundException;
-import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
-import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
-import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
-import org.verapdf.webapp.jobservice.model.entity.enums.TaskStatus;
-import org.verapdf.webapp.jobservice.server.entity.Job;
-import org.verapdf.webapp.jobservice.server.entity.JobTask;
-import org.verapdf.webapp.jobservice.server.repository.JobRepository;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
-
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,9 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class JobServiceCreateJobTests {
 	@Autowired
 	private MockMvc mockMvc;
-
-	@Autowired
-	private JobRepository jobRepository;
 
 	@MockBean
 	private QueueSender queueSender;

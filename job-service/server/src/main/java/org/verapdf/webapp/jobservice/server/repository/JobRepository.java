@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import org.verapdf.webapp.jobservice.server.entity.Job;
 
 import javax.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public interface JobRepository extends JpaRepository<Job, UUID> {
 	@Override
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Job> findById(UUID jobId);
+
+	void deleteAllByCreatedAtLessThan(Instant createdAt);
 }

@@ -30,6 +30,9 @@ management:
       base-path: /status
 
 verapdf:
+  cleaning:
+    cron: "0 0 1 * * *"
+    lifetime-delay-days: 7
   rabbitmq:
     queues:
       tasks-queue:

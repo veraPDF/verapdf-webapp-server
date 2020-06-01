@@ -15,5 +15,5 @@ spring:
       max-request-size: 101MB
 verapdf:
   files:
-    base-dir: ${java.io.tmpdir}
+    base-dir: ${java.io.tmpdir}/localstorage/files
     min-space-threshold: 5GB

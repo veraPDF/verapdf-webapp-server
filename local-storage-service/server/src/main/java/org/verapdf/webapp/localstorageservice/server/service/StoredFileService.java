@@ -1,9 +1,11 @@
 package org.verapdf.webapp.localstorageservice.server.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,17 +20,22 @@ import org.verapdf.webapp.localstorageservice.server.repository.StoredFileReposi
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
 public class StoredFileService {
 
+	private final int storedFileLifetimeDays;
 	private final StoredFileRepository storedFileRepository;
 	private final LocalFileService localFileService;
 	private final StoredFileMapper storedFileMapper;
 
-	public StoredFileService(StoredFileRepository storedFileRepository, LocalFileService localFileService,
+	public StoredFileService(@Value("${verapdf.cleaning.lifetime-delay-days}") int storedFileLifetimeDays,
+	                         StoredFileRepository storedFileRepository, LocalFileService localFileService,
 	                         StoredFileMapper storedFileMapper) {
+		this.storedFileLifetimeDays = storedFileLifetimeDays;
 		this.storedFileRepository = storedFileRepository;
 		this.localFileService = localFileService;
 		this.storedFileMapper = storedFileMapper;
@@ -63,6 +70,14 @@ public class StoredFileService {
 		}
 		savedStoredFile.setLocalPath(localFilePath);
 		return storedFileMapper.createDTOFromEntity(savedStoredFile);
+	}
+
+	@Transactional
+	@Scheduled(cron = "{verapdf.cleaning.cron}")
+	public void clearStoredFiles() {
+		Instant expiredTime = Instant.now().minus(storedFileLifetimeDays, ChronoUnit.DAYS)
+				.truncatedTo(ChronoUnit.DAYS);
+		storedFileRepository.deleteAllByCreatedAtLessThan(expiredTime);
 	}
 
 	private StoredFile constructStoredFile(MultipartFile file, String expectedChecksum) throws BadRequestException {

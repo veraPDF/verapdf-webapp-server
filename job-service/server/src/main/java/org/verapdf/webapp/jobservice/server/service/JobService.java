@@ -4,8 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.verapdf.webapp.error.exception.BadRequestException;
 import org.verapdf.webapp.error.exception.ConflictException;
@@ -23,6 +24,8 @@ import org.verapdf.webapp.jobservice.server.repository.JobRepository;
 import org.verapdf.webapp.jobservice.server.repository.JobTaskRepository;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 
@@ -31,15 +34,18 @@ public class JobService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
+	private final int jobLifetimeDays;
 	private final JobRepository jobRepository;
 	private final JobTaskRepository taskRepository;
 	private final QueueSender queueSender;
 	private final JobMapper jobMapper;
 	private final ObjectMapper objectMapper;
 
-	public JobService(JobRepository jobRepository, JobTaskRepository taskRepository,
+	public JobService(@Value("${verapdf.cleaning.lifetime-delay-days}") int jobLifetimeDays,
+	                  JobRepository jobRepository, JobTaskRepository taskRepository,
 	                  QueueSender queueSender, JobMapper jobMapper,
 	                  ObjectMapper objectMapper) {
+		this.jobLifetimeDays = jobLifetimeDays;
 		this.jobRepository = jobRepository;
 		this.taskRepository = taskRepository;
 		this.queueSender = queueSender;
@@ -109,6 +115,14 @@ public class JobService {
 		job = jobRepository.saveAndFlush(job);
 
 		return jobMapper.createDTOFromEntity(job);
+	}
+
+	@Transactional
+	@Scheduled(cron = "{verapdf.cleaning.cron}")
+	public void clearJobsAndTasks() {
+		Instant expiredTime = Instant.now().minus(jobLifetimeDays, ChronoUnit.DAYS)
+				.truncatedTo(ChronoUnit.DAYS);
+		jobRepository.deleteAllByCreatedAtLessThan(expiredTime);
 	}
 
 	private Job findJobById(UUID jobId) throws NotFoundException {

@@ -50,6 +50,10 @@ public class Job {
 		return createdAt;
 	}
 
+	public void setCreatedAt(Instant createdAt) {
+		this.createdAt = createdAt;
+	}
+
 	public JobStatus getStatus() {
 		return status;
 	}

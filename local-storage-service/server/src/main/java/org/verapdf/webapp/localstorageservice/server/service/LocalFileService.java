@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
 import org.verapdf.webapp.localstorageservice.server.error.exception.LowDiskSpaceException;
@@ -16,18 +17,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class LocalFileService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LocalFileService.class);
 
 	private final File fileBaseDir;
+	private final int fileLifetimeDays;
 	private final DataSize minSpaceThreshold;
 
 	public LocalFileService(@Value("${verapdf.files.base-dir}") String baseDirPath,
+	                        @Value("${verapdf.cleaning.lifetime-delay-days}") int fileLifetimeDays,
 	                        @Value("${verapdf.files.min-space-threshold}") DataSize minSpaceThreshold) throws IOException {
 		this.fileBaseDir = new File(baseDirPath);
+		this.fileLifetimeDays = fileLifetimeDays;
 		this.minSpaceThreshold = minSpaceThreshold;
 		if (!this.fileBaseDir.isDirectory()) {
 			LOGGER.warn("Missing file directory. Trying to create with path: {}", this.fileBaseDir.getAbsolutePath());
@@ -44,6 +50,26 @@ public class LocalFileService {
 	                             String expectedContentMD5) throws IOException, VeraPDFBackendException {
 		checkNewFileAvailability();
 		return saveFile(inputStream, fileName, expectedContentMD5);
+	}
+
+	@Scheduled(cron = "{verapdf.cleaning.cron}")
+	public void clearLocalFiles() {
+		LocalDate now = LocalDate.now();
+		for (File dir : fileBaseDir.listFiles()) {
+			boolean shouldBeRemoved = true;
+			if (dir.isDirectory()) {
+				try {
+					LocalDate dirNameDate = LocalDate.parse(dir.getName());
+					long period = ChronoUnit.DAYS.between(dirNameDate, now);
+					shouldBeRemoved = period >= fileLifetimeDays;
+				} catch (DateTimeException e) {
+					shouldBeRemoved = true;
+				}
+			}
+			if (shouldBeRemoved) {
+				FilesTool.deleteFile(dir);
+			}
+		}
 	}
 
 	private File getFileOnDiskByPath(String localPath) throws FileNotFoundException {
