@@ -6,14 +6,9 @@ import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
-import org.verapdf.webapp.jobservice.model.dto.JobTaskDTO;
-import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
-import org.verapdf.webapp.jobservice.model.entity.enums.TaskStatus;
 import org.verapdf.webapp.jobservice.server.service.JobService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @RestController

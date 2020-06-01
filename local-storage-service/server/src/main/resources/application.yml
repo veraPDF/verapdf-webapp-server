@@ -24,6 +24,9 @@ management:
       base-path: /status
 
 verapdf:
+  cleaning:
+    cron: "0 0 1 * * *"
+    lifetime-delay-days: 7
   files:
     min-space-threshold: ${localstorage.disk.min.space.threshold:5GB}
     base-dir: /opt/verapdf/localstorageservice/files

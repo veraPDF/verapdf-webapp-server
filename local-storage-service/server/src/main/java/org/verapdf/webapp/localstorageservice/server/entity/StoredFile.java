@@ -77,4 +77,8 @@ public class StoredFile {
 	public Instant getCreatedAt() {
 		return createdAt;
 	}
+
+	public void setCreatedAt(Instant createdAt) {
+		this.createdAt = createdAt;
+	}
 }
