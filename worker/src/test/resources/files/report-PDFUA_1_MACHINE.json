@@ -9,7 +9,7 @@
     [
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"7.1",
         "testNumber":9,
         "status":"failed",
@@ -28,7 +28,7 @@
       },
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"5",
         "testNumber":1,
         "status":"failed",
@@ -47,7 +47,7 @@
       },
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"7.3",
         "testNumber":1,
         "status":"failed",
@@ -66,7 +66,7 @@
       },
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"7.2",
         "testNumber":33,
         "status":"failed",
@@ -85,7 +85,7 @@
       },
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"7.2",
         "testNumber":2,
         "status":"failed",
@@ -124,7 +124,7 @@
       },
       {
         "ruleStatus":"FAILED",
-        "specification":null,
+        "specification":"ISO 14289-1:2014",
         "clause":"7.1",
         "testNumber":10,
         "status":"failed",
