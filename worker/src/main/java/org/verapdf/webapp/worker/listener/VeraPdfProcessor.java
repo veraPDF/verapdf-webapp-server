@@ -56,7 +56,7 @@ public class VeraPdfProcessor {
 				ValidationProfile validationProfile
 						= profileMapper.getValidationProfile(profile);
 				if (validationProfile == null) {
-					throw new VeraPDFProcessingException(
+					throw new IllegalArgumentException(
 							"Missing validation profile for " + profile.name());
 				}
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(is, validationProfile.getPDFAFlavour());
@@ -70,10 +70,8 @@ public class VeraPdfProcessor {
 					validationResult.getProfileDetails().getName(),
 					getStatement(validationResult.isCompliant()),
 					validationResult.isCompliant());
-		} catch(VeraPDFProcessingException e) {
-			throw e;
 		} catch (Exception e) {
-			throw new VeraPDFProcessingException("Exception during job processing.", e);
+			throw new VeraPDFProcessingException(e.getMessage(), e);
 		}
 	}
 }

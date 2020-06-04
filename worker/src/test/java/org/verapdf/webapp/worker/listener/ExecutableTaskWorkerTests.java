@@ -96,6 +96,32 @@ public class ExecutableTaskWorkerTests {
 	}
 
 	@Test
+	public void processMalformedPDFTest() throws IOException {
+		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
+
+		Mockito.doReturn(createDescriptor(fileId, "veraPDFMalformedTestSuite.pdf", "924365c6c67e35adf07db072fb6a4359", 115329))
+		       .when(localStorageServiceClient)
+		       .getFileDescriptorById(fileId);
+		Mockito.doReturn(createResource("/files/veraPDFMalformedTestSuite.pdf"))
+		       .when(localStorageServiceClient)
+		       .getFileResourceById(fileId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
+				+ "\"profile\":\"PDFA_1_A\"}");
+		String expectedMessage
+				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\"," +
+				  "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"," +
+				  "\"errorType\":\"PROCESSING_INTERNAL_ERROR\"," +
+				  "\"errorMessage\":\"Couldn't parse stream\"}";
+
+		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
+		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
+		Mockito.verify(queueSender).sendMessage(expectedMessage);
+	}
+
+	@Test
 	public void notParseableUUIDOnProcessTest() {
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"notParseableMessage\","
@@ -513,20 +539,29 @@ public class ExecutableTaskWorkerTests {
 	}
 
 	private Resource createResource() throws IOException {
+		return createResource("/files/veraPDFTestSuite.pdf");
+	}
+
+	private Resource createResource(String resourcePath) throws IOException {
 		Path fileToValidatePath
 				= Files.createTempFile(tempDir.toPath(), "file_to_validate", "");
-		FileUtils.copyToFile(getClass().getResourceAsStream("/files/veraPDFTestSuite.pdf"),
-				fileToValidatePath.toFile());
+		FileUtils.copyToFile(getClass().getResourceAsStream(resourcePath),
+		                     fileToValidatePath.toFile());
 		return new FileSystemResource(fileToValidatePath);
 	}
 
 	private StoredFileDTO createDescriptor(UUID fileId) {
+		return createDescriptor(fileId, "veraPDFTestSuite.pdf",
+		                        "4043dbacc119258a99820d62552e6a93", 3387);
+	}
+
+	private StoredFileDTO createDescriptor(UUID fileId, String fileName, String contentMD5, long contentSize) {
 		StoredFileDTO storedFileDTO = new StoredFileDTO();
 		storedFileDTO.setId(fileId);
-		storedFileDTO.setFileName("veraPDFTestSuite.pdf");
-		storedFileDTO.setContentMD5("4043dbacc119258a99820d62552e6a93");
+		storedFileDTO.setFileName(fileName);
+		storedFileDTO.setContentMD5(contentMD5);
 		storedFileDTO.setContentType("application/pdf");
-		storedFileDTO.setContentSize(3387);
+		storedFileDTO.setContentSize(contentSize);
 		return storedFileDTO;
 	}
 
