@@ -1,5 +1,6 @@
 package org.verapdf.webapp.jobservice.server.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,12 @@ public class JobController {
 	public JobDTO updateJob(@PathVariable UUID jobId, @RequestBody @Valid JobDTO jobDTO) throws NotFoundException,
 	                                                                                            ConflictException {
 		return jobService.updateJob(jobId, jobDTO);
+	}
+
+	@DeleteMapping("/{jobId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void deleteJob(@PathVariable UUID jobId) {
+		jobService.deleteJobById(jobId);
 	}
 
 	@PostMapping("/{jobId}/execution")

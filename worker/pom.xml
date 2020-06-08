@@ -47,6 +47,11 @@
         </dependency>
         <dependency>
             <groupId>org.verapdf</groupId>
+            <artifactId>job-service-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
             <artifactId>job-service-model</artifactId>
             <version>${project.version}</version>
         </dependency>

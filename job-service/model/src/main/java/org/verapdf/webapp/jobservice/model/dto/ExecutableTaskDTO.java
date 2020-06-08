@@ -1,22 +1,18 @@
 package org.verapdf.webapp.jobservice.model.dto;
 
-import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
-
 import java.util.Objects;
 import java.util.UUID;
 
 public class ExecutableTaskDTO {
 	private UUID jobId;
 	private UUID fileId;
-	private Profile profile;
 
 	public ExecutableTaskDTO() {
 	}
 
-	public ExecutableTaskDTO(UUID jobId, UUID fileId, Profile profile) {
+	public ExecutableTaskDTO(UUID jobId, UUID fileId) {
 		this.jobId = jobId;
 		this.fileId = fileId;
-		this.profile = profile;
 	}
 
 	public UUID getJobId() {
@@ -34,15 +30,6 @@ public class ExecutableTaskDTO {
 	public void setFileId(UUID fileId) {
 		this.fileId = fileId;
 	}
-
-	public Profile getProfile() {
-		return profile;
-	}
-
-	public void setProfile(Profile profile) {
-		this.profile = profile;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -53,13 +40,12 @@ public class ExecutableTaskDTO {
 		}
 		ExecutableTaskDTO that = (ExecutableTaskDTO) o;
 		return Objects.equals(jobId, that.jobId) &&
-				Objects.equals(fileId, that.fileId) &&
-				profile == that.profile;
+				Objects.equals(fileId, that.fileId);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(jobId, fileId, profile);
+		return Objects.hash(jobId, fileId);
 	}
 
 	@Override
@@ -67,7 +53,6 @@ public class ExecutableTaskDTO {
 		return "ExecutableTaskDTO{" +
 				"jobId=" + jobId +
 				", fileId=" + fileId +
-				", profile=" + profile +
 				'}';
 	}
 }

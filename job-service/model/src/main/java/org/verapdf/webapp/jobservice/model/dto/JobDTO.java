@@ -1,6 +1,8 @@
 package org.verapdf.webapp.jobservice.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.verapdf.webapp.jobservice.model.deserializer.StringToJobStatusFailSaveConverter;
+import org.verapdf.webapp.jobservice.model.deserializer.StringToUUIDFailSaveConverter;
 import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 
@@ -11,11 +13,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class JobDTO {
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonDeserialize(converter = StringToUUIDFailSaveConverter.class)
 	private UUID id;
 	@NotNull
 	private Profile profile;
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonDeserialize(converter = StringToJobStatusFailSaveConverter.class)
 	private JobStatus status;
 	private List<@NotNull @Valid JobTaskDTO> tasks;
 

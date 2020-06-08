@@ -18,6 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestClientResponseException;
+import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
+import org.verapdf.webapp.jobservice.model.dto.JobDTO;
+import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
+import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 import org.verapdf.webapp.localstorageservice.client.service.LocalStorageServiceClient;
 import org.verapdf.webapp.localstorageservice.model.dto.StoredFileDTO;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
@@ -44,6 +48,9 @@ public class ExecutableTaskWorkerTests {
 	private File workingDir;
 
 	@MockBean
+	private JobServiceClient jobServiceClient;
+
+	@MockBean
 	private LocalStorageServiceClient localStorageServiceClient;
 
 	@MockBean
@@ -57,16 +64,20 @@ public class ExecutableTaskWorkerTests {
 
 	@AfterEach
 	public void checkWorkingDirectory() {
-		assertTrue(workingDir.listFiles().length == 0);
-		Mockito.verifyNoMoreInteractions(localStorageServiceClient, queueSender);
+		assertEquals(0, workingDir.listFiles().length);
+		Mockito.verifyNoMoreInteractions(jobServiceClient, localStorageServiceClient, queueSender);
 		Mockito.validateMockitoUsage();
 	}
 
 	@Test
 	public void processTest() throws IOException {
+		UUID jobId = UUID.fromString("397856eb-10fb-48c1-ad45-c90e418f070a");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doReturn(createResource())
@@ -80,14 +91,14 @@ public class ExecutableTaskWorkerTests {
 						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
-				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-				+ "\"profile\":\"PDFA_1_A\"}");
+				"{\"jobId\":\"397856eb-10fb-48c1-ad45-c90e418f070a\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 		String expectedMessage
-				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				= "{\"jobId\":\"397856eb-10fb-48c1-ad45-c90e418f070a\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
 				+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
@@ -97,9 +108,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void processMalformedPDFTest() throws IOException {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId, "veraPDFMalformedTestSuite.pdf", "924365c6c67e35adf07db072fb6a4359", 115329))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId, "veraPDFMalformedTestSuite.pdf", "924365c6c67e35adf07db072fb6a4359", 115329))
 		       .when(localStorageServiceClient)
 		       .getFileDescriptorById(fileId);
 		Mockito.doReturn(createResource("/files/veraPDFMalformedTestSuite.pdf"))
@@ -108,14 +123,14 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-				+ "\"profile\":\"PDFA_1_A\"}");
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\"," +
 				  "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"," +
 				  "\"errorType\":\"PROCESSING_INTERNAL_ERROR\"," +
 				  "\"errorMessage\":\"Couldn't parse stream\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -125,17 +140,7 @@ public class ExecutableTaskWorkerTests {
 	public void notParseableUUIDOnProcessTest() {
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"notParseableMessage\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
-		//just write log
-	}
-
-	@Test
-	public void notParseableProfileOnProcessTest() {
-		executableTaskWorker.handleMessage(
-				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"notExistedProfile\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 		//just write log
 	}
 
@@ -146,45 +151,143 @@ public class ExecutableTaskWorkerTests {
 	}
 
 	@Test
+	public void nullableJobIdOnPassedExecutableTaskDTOOnProcessTest() {
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":null,"
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
+
+		String expectedMessage
+				= "{\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"" +
+				",\"errorType\":\"INVALID_TASK_DATA_ERROR\"," +
+				"\"errorMessage\":\"Invalid task request: " +
+				"{\\\"jobId\\\":null," +
+				"\\\"fileId\\\":\\\"07b17d5d-1010-4980-b280-94129cb13838\\\"}\"}";
+
+		Mockito.verify(queueSender).sendMessage(expectedMessage);
+	}
+
+	@Test
 	public void nullableFileIdOnPassedExecutableTaskDTOOnProcessTest() {
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":null,"
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":null}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\"," +
 				"\"errorType\":\"INVALID_TASK_DATA_ERROR\"," +
 				"\"errorMessage\":\"Invalid task request: " +
 				"{\\\"jobId\\\":\\\"780e3129-42a7-4154-8ce9-436fc1a6dc35\\\"," +
-				"\\\"fileId\\\":null,\\\"profile\\\":\\\"PDFA_1_A\\\"}\"}";
+				"\\\"fileId\\\":null}\"}";
 
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
-	public void nullableProfileOnPassedExecutableTaskDTOOnProcessTest() {
+	public void nullableJobProfileOnGottenJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+
+		JobDTO jobDTO = createJob(jobId);
+		jobDTO.setProfile(null);
+		Mockito.doReturn(jobDTO)
+				.when(jobServiceClient)
+				.getJobById(jobId);
+
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":null}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
-				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\"" +
-				",\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"" +
-				",\"errorType\":\"INVALID_TASK_DATA_ERROR\"," +
-				"\"errorMessage\":\"Invalid task request: " +
-				"{\\\"jobId\\\":\\\"780e3129-42a7-4154-8ce9-436fc1a6dc35\\\"," +
-				"\\\"fileId\\\":\\\"07b17d5d-1010-4980-b280-94129cb13838\\\"," +
-				"\\\"profile\\\":null}\"}";
+				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\"," +
+				"\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"," +
+				"\"errorType\":\"INVALID_CONFIGURATION_DATA_ERROR\"," +
+				"\"errorMessage\":\"Missing profile for validation\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
+		Mockito.verify(queueSender).sendMessage(expectedMessage);
+	}
+
+	@Test
+	public void createdJobStatusOnGottenJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+
+		JobDTO jobDTO = createJob(jobId);
+		jobDTO.setStatus(JobStatus.CREATED);
+		Mockito.doReturn(jobDTO)
+				.when(jobServiceClient)
+				.getJobById(jobId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
+
+		Mockito.verify(jobServiceClient).getJobById(jobId);
+	}
+
+	@Test
+	public void finishedJobStatusOnGottenJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+
+		JobDTO jobDTO = createJob(jobId);
+		jobDTO.setStatus(JobStatus.FINISHED);
+		Mockito.doReturn(jobDTO)
+				.when(jobServiceClient)
+				.getJobById(jobId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
+
+		Mockito.verify(jobServiceClient).getJobById(jobId);
+	}
+
+	@Test
+	public void notFoundJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+
+		Mockito.doThrow(new RestClientResponseException("404 : [no body]",
+				HttpStatus.NOT_FOUND.value(), "", null, "no body".getBytes(), null))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
+
+		Mockito.verify(jobServiceClient).getJobById(jobId);
+	}
+
+	@Test
+	public void badRequestExceptionOnGetJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+
+		Mockito.doThrow(new RestClientResponseException("400 : [incorrect type of parameters]",
+				HttpStatus.BAD_REQUEST.value(), "", null,
+				"incorrect type of parameters".getBytes(), null))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
+
+		String expectedMessage
+				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
+				+ "\"errorType\":\"JOB_OBTAINING_TO_PROCESS_ERROR\","
+				+ "\"errorMessage\":\"incorrect type of parameters\"}";
+
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
 	public void notFoundFileDescriptorOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
 		Mockito.doThrow(new RestClientResponseException("404 : [no body]",
 				HttpStatus.NOT_FOUND.value(), "", null, "no body".getBytes(), null))
 				.when(localStorageServiceClient)
@@ -192,8 +295,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 					"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-					+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-					+ "\"profile\":\"PDFA_1_A\"}");
+					+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -201,14 +303,19 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"no body\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
 	public void internalServerExceptionOnGetFileDescriptorOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
 		Mockito.doThrow(new RestClientResponseException(
 				"500 : [internal exception during getting file descriptor]",
 				HttpStatus.INTERNAL_SERVER_ERROR.value(), "", null,
@@ -218,8 +325,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -227,14 +333,19 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"internal exception during getting file descriptor\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
 	public void badRequestExceptionOnGetFileDescriptorOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
 		Mockito.doThrow(new RestClientResponseException("400 : [incorrect type of parameters]",
 				HttpStatus.BAD_REQUEST.value(), "", null,
 				"incorrect type of parameters".getBytes(), null))
@@ -243,8 +354,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -252,14 +362,19 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
 	public void requestTimeoutExceptionOnGetFileDescriptorOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
 		Mockito.doThrow(new RestClientResponseException("408 : [request timeout]",
 				HttpStatus.REQUEST_TIMEOUT.value(), "", null, "request timeout".getBytes(), null))
 				.when(localStorageServiceClient)
@@ -267,8 +382,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -276,15 +390,20 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"request timeout\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
 	@Test
 	public void notFoundResourceOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doThrow(new RestClientResponseException("404 : [no body]",
@@ -294,8 +413,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -303,6 +421,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"no body\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -310,9 +429,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void internalServerExceptionOnGetResourceOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doThrow(new RestClientResponseException(
@@ -324,8 +447,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -333,6 +455,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"internal exception during getting file resource\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -340,9 +463,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void badRequestExceptionOnGetResourceOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doThrow(new RestClientResponseException("400 : [incorrect type of parameters]",
@@ -353,8 +480,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -362,6 +488,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -369,9 +496,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void requestTimeoutExceptionOnGetResourceOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doThrow(new RestClientResponseException("408 : [incorrect type of parameters]",
@@ -382,8 +513,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -391,6 +521,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				+ "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -398,10 +529,14 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void incorrectChecksumOnSaveFileOnDiskOnProcessTest() throws IOException {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		StoredFileDTO storedFileDTO = createDescriptor(fileId);
+		StoredFileDTO storedFileDTO = createFileDescriptor(fileId);
 		storedFileDTO.setContentMD5("Incorrect checksum");
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
 		Mockito.doReturn(storedFileDTO)
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
@@ -411,8 +546,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -422,6 +556,7 @@ public class ExecutableTaskWorkerTests {
 				+ " obtained file checksum. Expected: 4043dbacc119258a99820d62552e6a93,"
 				+ " actual: Incorrect checksum\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
@@ -429,9 +564,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void internalServerExceptionOnSaveReportFileOnProcessTest() throws IOException {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doReturn(createResource())
@@ -449,8 +588,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -458,6 +596,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				+ "\"errorMessage\":\"internal exception during saving file report\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
@@ -467,9 +606,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void badRequestExceptionOnSaveReportFileOnProcessTest() throws IOException {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doReturn(createResource())
@@ -486,8 +629,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -495,6 +637,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				+ "\"errorMessage\":\"incorrect parameters\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
@@ -504,9 +647,13 @@ public class ExecutableTaskWorkerTests {
 
 	@Test
 	public void requestTimeoutExceptionOnSaveReportFileOnProcessTest() throws IOException {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doReturn(createDescriptor(fileId))
+		Mockito.doReturn(createJob(jobId))
+				.when(jobServiceClient)
+				.getJobById(jobId);
+		Mockito.doReturn(createFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.getFileDescriptorById(fileId);
 		Mockito.doReturn(createResource())
@@ -522,8 +669,7 @@ public class ExecutableTaskWorkerTests {
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
-						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
-						+ "\"profile\":\"PDFA_1_A\"}");
+						+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}");
 
 		String expectedMessage
 				= "{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -531,6 +677,7 @@ public class ExecutableTaskWorkerTests {
 				+ "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				+ "\"errorMessage\":\"request timeout\"}";
 
+		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
@@ -550,12 +697,20 @@ public class ExecutableTaskWorkerTests {
 		return new FileSystemResource(fileToValidatePath);
 	}
 
-	private StoredFileDTO createDescriptor(UUID fileId) {
-		return createDescriptor(fileId, "veraPDFTestSuite.pdf",
+	private JobDTO createJob(UUID jobId) {
+		JobDTO jobDTO = new JobDTO();
+		jobDTO.setId(jobId);
+		jobDTO.setProfile(Profile.PDFA_1_A);
+		jobDTO.setStatus(JobStatus.PROCESSING);
+		return jobDTO;
+	}
+
+	private StoredFileDTO createFileDescriptor(UUID fileId) {
+		return createFileDescriptor(fileId, "veraPDFTestSuite.pdf",
 		                        "4043dbacc119258a99820d62552e6a93", 3387);
 	}
 
-	private StoredFileDTO createDescriptor(UUID fileId, String fileName, String contentMD5, long contentSize) {
+	private StoredFileDTO createFileDescriptor(UUID fileId, String fileName, String contentMD5, long contentSize) {
 		StoredFileDTO storedFileDTO = new StoredFileDTO();
 		storedFileDTO.setId(fileId);
 		storedFileDTO.setFileName(fileName);
