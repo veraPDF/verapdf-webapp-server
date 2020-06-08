@@ -5,6 +5,8 @@ spring:
 verapdf:
   local-storage-service:
     uri: http://localhost:8080/api
+  job-service:
+    uri: http://localhost:8082/api
 
   files:
     worker-dir: ${java.io.tmpdir}/verapdf/worker/files

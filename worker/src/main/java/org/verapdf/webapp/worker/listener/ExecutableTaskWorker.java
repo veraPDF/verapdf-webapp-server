@@ -7,12 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.verapdf.processor.reports.ValidationReport;
 import org.verapdf.webapp.error.exception.BadRequestException;
+import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskResultDTO;
+import org.verapdf.webapp.jobservice.model.dto.JobDTO;
+import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
 import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
 import org.verapdf.webapp.queueclient.handler.QueueListenerHandler;
 import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskDTO;
@@ -36,6 +40,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 	private final QueueSender queueSender;
 
 	private final ObjectMapper objectMapper;
+	private final JobServiceClient jobServiceClient;
 	private final LocalStorageServiceClient localStorageServiceClient;
 	private final VeraPdfProcessor veraPdfProcessor;
 
@@ -43,11 +48,13 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 
 	@Autowired
 	public ExecutableTaskWorker(QueueSender queueSender,
+	                            JobServiceClient jobServiceClient,
 	                            LocalStorageServiceClient localStorageServiceClient,
 	                            VeraPdfProcessor veraPdfProcessor,
 	                            ObjectMapper objectMapper,
 	                            @Qualifier("workingDir") File workDir) {
 		this.queueSender = queueSender;
+		this.jobServiceClient = jobServiceClient;
 		this.localStorageServiceClient = localStorageServiceClient;
 		this.veraPdfProcessor = veraPdfProcessor;
 		this.objectMapper = objectMapper;
@@ -70,10 +77,18 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 		try {
 			checkParsedExecutableTaskDTO(taskDTO, message);
 
+			JobDTO jobDTO = getJob(taskDTO.getJobId());
+			if (jobDTO == null || JobStatus.PROCESSING != jobDTO.getStatus()) {
+				// no job to be process or job is already finished
+				return;
+			}
+
+			checkProcessingConfiguration(jobDTO);
+
 			fileToProcess = getFileToProcess(taskDTO.getFileId());
 
 			ValidationReport validationReport
-					= veraPdfProcessor.validate(fileToProcess, taskDTO.getProfile());
+					= veraPdfProcessor.validate(fileToProcess, jobDTO.getProfile());
 
 			StoredFileDTO reportFile = saveReportFile(validationReport, taskDTO.getFileId());
 
@@ -96,10 +111,30 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 		}
 	}
 
+	private void checkProcessingConfiguration(JobDTO jobDTO) throws VeraPDFWorkerException {
+		if (jobDTO.getProfile() == null) {
+			throw new VeraPDFWorkerException(TaskError.INVALID_CONFIGURATION_DATA_ERROR,
+					"Missing profile for validation");
+		}
+	}
+
 	private void checkParsedExecutableTaskDTO(ExecutableTaskDTO taskDTO, String originalDTOData) throws VeraPDFWorkerException {
-		if (taskDTO.getFileId() == null || taskDTO.getProfile() == null) {
+		if (taskDTO.getJobId() == null || taskDTO.getFileId() == null) {
 			throw new VeraPDFWorkerException(TaskError.INVALID_TASK_DATA_ERROR,
 					"Invalid task request: " + originalDTOData);
+		}
+	}
+
+	private JobDTO getJob(UUID jobId) throws VeraPDFWorkerException {
+		try {
+			 return jobServiceClient.getJobById(jobId);
+		} catch(RestClientResponseException e) {
+			if (HttpStatus.NOT_FOUND.value() == e.getRawStatusCode()) {
+				return null;
+			} else {
+				throw new VeraPDFWorkerException(TaskError.JOB_OBTAINING_TO_PROCESS_ERROR,
+						e.getResponseBodyAsString());
+			}
 		}
 	}
 

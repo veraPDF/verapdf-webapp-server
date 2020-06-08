@@ -88,8 +88,9 @@ services:
     build: ../worker
     restart: always
     depends_on:
-    - queue
+    - job-service
     - file-storage
+    - queue
     environment:
       AMQP_SERVER_HOST: queue
       AMQP_USER: ${AMQP_SERVER_USER}
@@ -100,6 +101,8 @@ services:
       AMQP_SERVER_SENDING_QUEUE_MAX_SIZE: 2047MB
       AMQP_SERVER_LISTENING_QUEUE_NAME: requestQueue
       AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE: 2047MB
+      JOB_SERVICE_HOST: job-service
+      JOB_SERVICE_PORT: 8080
       FILE_STORAGE_HOST: file-storage
       FILE_STORAGE_PORT: 8080
 

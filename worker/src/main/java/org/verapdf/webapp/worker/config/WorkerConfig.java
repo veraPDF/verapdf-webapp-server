@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.unit.DataSize;
+import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.localstorageservice.client.service.LocalStorageServiceClient;
 import org.verapdf.webapp.queueclient.handler.QueueListenerHandler;
 import org.verapdf.webapp.queueclient.handler.QueueSenderErrorEventHandler;
@@ -35,6 +36,12 @@ public class WorkerConfig {
 		}
 		FileUtils.cleanDirectory(res);
 		return res;
+	}
+
+	@Bean
+	public JobServiceClient jobServiceClient(
+			@Value("${verapdf.job-service.uri}") String uriToJobService) throws URISyntaxException {
+		return new JobServiceClient(new URI(uriToJobService));
 	}
 
 	@Bean

@@ -23,3 +23,5 @@ verapdf:
     worker-dir: /opt/verapdf/worker/files/
   local-storage-service:
     uri: http://${FILE_STORAGE_HOST}:${FILE_STORAGE_PORT}/api
+  job-service:
+    uri: http://${JOB_SERVICE_HOST}:${JOB_SERVICE_PORT}/api

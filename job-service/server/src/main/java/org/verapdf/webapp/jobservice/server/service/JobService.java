@@ -81,6 +81,13 @@ public class JobService {
 	}
 
 	@Transactional
+	public void deleteJobById(UUID jobId) {
+		if (jobRepository.existsById(jobId)) {
+			jobRepository.deleteById(jobId);
+		}
+	}
+
+	@Transactional
 	public JobDTO startJobExecution(UUID jobId) throws VeraPDFBackendException {
 
 		Job job = findJobById(jobId);
@@ -99,8 +106,7 @@ public class JobService {
 				continue;
 			}
 
-			ExecutableTaskDTO executableTaskDTO = new ExecutableTaskDTO(
-					jobId, task.getFileId(), job.getProfile());
+			ExecutableTaskDTO executableTaskDTO = new ExecutableTaskDTO(jobId, task.getFileId());
 			try {
 				queueSender.sendMessage(objectMapper.writeValueAsString(executableTaskDTO));
 				task.setStatus(TaskStatus.PROCESSING);
