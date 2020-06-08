@@ -1,5 +1,11 @@
 package org.verapdf.webapp.jobservice.server.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +39,12 @@ public class ProfileController {
 		this.profiles.add(new ProfileDTO(Profile.PDFA_AUTO, false));
 	}
 
+	@Operation(summary = "Get list of all validation profiles")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved list of profiles",
+			             content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+			                                 schema = @Schema(implementation = ProfileDTO.class))})
+	})
 	@GetMapping
 	public List<ProfileDTO> getProfiles() {
 		return profiles;
