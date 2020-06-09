@@ -283,30 +283,21 @@ public class JobServiceCreateJobTests {
 		                     "\"id\":\"" + id + "\"}";
 
 		//Creating job
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
+		Exception resolvedException = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
-		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-		                          .andExpect(jsonPath("$.id").isNotEmpty())
-		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
-		                          .andExpect(jsonPath("$.status").value("CREATED"))
-		                          .andReturn();
+				.andExpect(status().isBadRequest())
+				.andExpect(MockMvcResultMatchers.content()
+						.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+				.andExpect(jsonPath("$.message").value("Argument parsing failed"))
+				.andExpect(jsonPath("$.timestamp").isNotEmpty())
+				.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+				.andReturn().getResolvedException();
 
-		String jsonResponse = result.getResponse().getContentAsString();
-		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
-
-		assertNotEquals(uploadedJobId, id);
-
-		//Retrieving job data
-		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(status().isOk())
-		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'CREATED'," +
-		                                 "'tasks':null}", true));
+		assertNotNull(resolvedException);
+		assertEquals(HttpMessageNotReadableException.class, resolvedException.getClass());
+		assertTrue(resolvedException.getMessage().startsWith("JSON parse error"));
 	}
 
 	@Test
@@ -314,28 +305,21 @@ public class JobServiceCreateJobTests {
 		String requestBody = "{\"profile\": \"TAGGED_PDF\"," +
 		                     "\"status\":\"invalid status\"}";
 		//Creating job
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
+		Exception resolvedException = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
-		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-		                          .andExpect(jsonPath("$.id").isNotEmpty())
-		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
-		                          .andExpect(jsonPath("$.status").value("CREATED"))
-		                          .andReturn();
+				.andExpect(status().isBadRequest())
+				.andExpect(MockMvcResultMatchers.content()
+						.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+				.andExpect(jsonPath("$.message").value("Argument parsing failed"))
+				.andExpect(jsonPath("$.timestamp").isNotEmpty())
+				.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+				.andReturn().getResolvedException();
 
-		String jsonResponse = result.getResponse().getContentAsString();
-		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
-
-		//Retrieving job data
-		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(status().isOk())
-		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'CREATED'," +
-		                                 "'tasks':null}", true));
+		assertNotNull(resolvedException);
+		assertEquals(HttpMessageNotReadableException.class, resolvedException.getClass());
+		assertTrue(resolvedException.getMessage().startsWith("JSON parse error"));
 	}
 
 	@Test
@@ -382,36 +366,21 @@ public class JobServiceCreateJobTests {
 		                     "}";
 
 		//Creating job
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
+		Exception resolvedException = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
-		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-		                          .andExpect(jsonPath("$.id").isNotEmpty())
-		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
-		                          .andExpect(jsonPath("$.status").value("CREATED"))
-		                          .andExpect(jsonPath("$.tasks").isArray())
-		                          .andExpect(jsonPath("$.tasks.length()").value(1))
-		                          .andExpect(jsonPath("$.tasks[0].fileId")
-				                                     .value("534bd16b-6bd5-404e-808e-5dc731c73963"))
-		                          .andExpect(jsonPath("$.tasks[0].status").value("CREATED"))
-		                          .andReturn();
+				.andExpect(status().isBadRequest())
+				.andExpect(MockMvcResultMatchers.content()
+						.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
+				.andExpect(jsonPath("$.message").value("Argument parsing failed"))
+				.andExpect(jsonPath("$.timestamp").isNotEmpty())
+				.andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()))
+				.andReturn().getResolvedException();
 
-		String jsonResponse = result.getResponse().getContentAsString();
-		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
-
-		//Retrieving job data
-		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(status().isOk())
-		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'CREATED'," +
-		                                 "'tasks':[{" +
-		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-		                                 "'status':'CREATED'" +
-		                                 "}]}", true));
+		assertNotNull(resolvedException);
+		assertEquals(HttpMessageNotReadableException.class, resolvedException.getClass());
+		assertTrue(resolvedException.getMessage().startsWith("JSON parse error"));
 	}
 
 	@Test

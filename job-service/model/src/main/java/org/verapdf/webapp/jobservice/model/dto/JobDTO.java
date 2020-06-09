@@ -11,11 +11,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class JobDTO {
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	private UUID id;
 	@NotNull
 	private Profile profile;
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	private JobStatus status;
 	private List<@NotNull @Valid JobTaskDTO> tasks;
 
