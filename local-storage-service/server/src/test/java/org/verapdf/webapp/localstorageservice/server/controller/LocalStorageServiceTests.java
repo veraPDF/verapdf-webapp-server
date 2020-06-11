@@ -1,6 +1,7 @@
 package org.verapdf.webapp.localstorageservice.server.controller;
 
 import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +57,7 @@ public class LocalStorageServiceTests {
 		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
 		                                                               .file(mockFile)
 		                                                               .file(mockChecksumPart))
-		                                .andExpect(status().isOk())
+		                                .andExpect(status().isCreated())
 		                                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                .andExpect(jsonPath("$.id").isNotEmpty())
 		                                .andExpect(jsonPath("$.fileName").value("testFileName.pdf"))
@@ -67,6 +68,9 @@ public class LocalStorageServiceTests {
 		//Retrieving fileID
 		String jsonResponse = uploadResult.getResponse().getContentAsString();
 		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
 
 		//Retrieving storedFile data
 		mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
@@ -102,7 +106,7 @@ public class LocalStorageServiceTests {
 		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
 		                                                               .file(mockFile)
 		                                                               .file(mockChecksumPart))
-		                                .andExpect(status().isOk())
+		                                .andExpect(status().isCreated())
 		                                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                .andExpect(jsonPath("$.id").isNotEmpty())
 		                                .andExpect(jsonPath("$.fileName").isEmpty())
@@ -110,9 +114,13 @@ public class LocalStorageServiceTests {
 		                                .andExpect(jsonPath("$.contentSize").value(10))
 		                                .andExpect(jsonPath("$.contentMD5").value("a8fc9834e7fef8d2b996020825133a55"))
 		                                .andReturn();
+
 		//Retrieving fileID
 		String jsonResponse = uploadResult.getResponse().getContentAsString();
 		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
 
 		//Retrieving storedFile data
 		mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
@@ -183,7 +191,7 @@ public class LocalStorageServiceTests {
 		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
 		                                                               .file(mockFile)
 		                                                               .file(mockChecksumPart))
-		                                .andExpect(status().isOk())
+		                                .andExpect(status().isCreated())
 		                                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                .andExpect(jsonPath("$.id").isNotEmpty())
 		                                .andExpect(jsonPath("$.fileName").value("testFileName.txt"))
@@ -194,6 +202,9 @@ public class LocalStorageServiceTests {
 		//Retrieving fileID
 		String jsonResponse = uploadResult.getResponse().getContentAsString();
 		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
 
 		//Retrieving storedFile data
 		mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
@@ -230,7 +241,7 @@ public class LocalStorageServiceTests {
 		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
 		                                                               .file(mockFile)
 		                                                               .file(mockChecksumPart))
-		                                .andExpect(status().isOk())
+		                                .andExpect(status().isCreated())
 		                                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                .andExpect(jsonPath("$.id").isNotEmpty())
 		                                .andExpect(jsonPath("$.fileName").value("testFileName.json"))
@@ -241,6 +252,9 @@ public class LocalStorageServiceTests {
 		//Retrieving fileID
 		String jsonResponse = uploadResult.getResponse().getContentAsString();
 		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
 
 		//Retrieving storedFile data
 		mockMvc.perform(MockMvcRequestBuilders.get("/files/" + uploadedFileId)
@@ -335,7 +349,7 @@ public class LocalStorageServiceTests {
 		MvcResult uploadResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/files")
 		                                                               .file(mockFile)
 		                                                               .file(mockChecksumPart))
-		                                .andExpect(status().isOk())
+		                                .andExpect(status().isCreated())
 		                                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                                .andExpect(jsonPath("$.id").isNotEmpty())
 		                                .andExpect(jsonPath("$.fileName").value("testFileName.pdf"))
@@ -347,6 +361,9 @@ public class LocalStorageServiceTests {
 		//Retrieving fileID
 		String jsonResponse = uploadResult.getResponse().getContentAsString();
 		String uploadedFileId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/files/" + uploadedFileId,
+				uploadResult.getResponse().getHeader("Location"));
 
 		//Check file exists in db
 		Optional<StoredFile> storedFile = storedFileRepository.findById(UUID.fromString(uploadedFileId));

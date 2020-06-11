@@ -2,6 +2,7 @@ package org.verapdf.webapp.jobservice.server.controller;
 
 import com.jayway.jsonpath.JsonPath;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,7 +43,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -52,6 +53,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -80,7 +84,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -97,6 +101,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -168,7 +175,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -177,6 +184,9 @@ public class JobServiceCreateJobTests {
 		                          .andReturn();
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -253,7 +263,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -263,6 +273,8 @@ public class JobServiceCreateJobTests {
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
 
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 		assertNotEquals(uploadedJobId, id);
 
 		//Retrieving job data
@@ -286,7 +298,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -296,6 +308,8 @@ public class JobServiceCreateJobTests {
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
 
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 		assertNotEquals(uploadedJobId, id);
 
 		//Retrieving job data
@@ -317,7 +331,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -326,6 +340,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		Assertions.assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -346,7 +363,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -355,6 +372,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -385,7 +405,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -399,6 +419,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
@@ -422,7 +445,7 @@ public class JobServiceCreateJobTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 		                                                         .contentType(MediaType.APPLICATION_JSON)
 		                                                         .content(requestBody))
-		                          .andExpect(status().isOk())
+		                          .andExpect(status().isCreated())
 		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		                          .andExpect(jsonPath("$.id").isNotEmpty())
 		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -431,6 +454,9 @@ public class JobServiceCreateJobTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Retrieving job data
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
