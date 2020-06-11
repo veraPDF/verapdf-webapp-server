@@ -24,6 +24,7 @@ import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorData;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -644,7 +645,7 @@ public class JobTaskResultHandlerTests {
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
-				.andExpect(status().isOk())
+				.andExpect(status().isCreated())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(jsonPath("$.id").isNotEmpty())
 				.andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
@@ -661,6 +662,9 @@ public class JobTaskResultHandlerTests {
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
+
+		assertEquals("http://localhost/jobs/" + uploadedJobId,
+				result.getResponse().getHeader("Location"));
 
 		//Starting job
 		mockMvc.perform(MockMvcRequestBuilders.post("/jobs/" + uploadedJobId + "/execution")
