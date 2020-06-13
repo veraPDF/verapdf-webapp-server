@@ -30,7 +30,7 @@ public class JobServiceClient {
 		if (jobId == null) {
 			return null;
 		}
-		
+
 		return restTemplate
 				.getForEntity(UriComponentsBuilder
 								.fromUri(uriToJobService)
