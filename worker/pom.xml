@@ -15,7 +15,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <verapdf.version>2.0.30</verapdf.version>
+        <verapdf.version>2.0.59</verapdf.version>
     </properties>
 
     <repositories>
