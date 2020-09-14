@@ -88,7 +88,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.doReturn(createReportFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"397856eb-10fb-48c1-ad45-c90e418f070a\","
@@ -102,7 +102,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -584,7 +584,7 @@ public class ExecutableTaskWorkerTests {
 				"internal exception during saving file report".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -600,7 +600,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -625,7 +625,7 @@ public class ExecutableTaskWorkerTests {
 				"incorrect parameters".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -641,7 +641,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -665,7 +665,7 @@ public class ExecutableTaskWorkerTests {
 				HttpStatus.REQUEST_TIMEOUT.value(), "", null, "request timeout".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -681,7 +681,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("35a7d1deffc1ad490bcc5eb3c557a399"), eq(MediaType.APPLICATION_JSON));
+				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
