@@ -2,7 +2,7 @@ version: '3.4'
 services:
   # File Storage
   file-storage-database:
-    build: ./localstorage-db
+    image: postgres:11.7
     environment:
       POSTGRES_USER: ${LOCAL_STORAGE_SERVICE_DATABASE_USER}
       POSTGRES_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
@@ -35,7 +35,7 @@ services:
 
   # Job Service
   job-service-database:
-    build: ./job-db
+    image: postgres:11.7
     environment:
       POSTGRES_USER: ${JOB_SERVICE_DATABASE_USER}
       POSTGRES_PASSWORD: ${JOB_SERVICE_DATABASE_PASSWORD}
