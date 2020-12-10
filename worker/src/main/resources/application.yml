@@ -1,12 +1,12 @@
 spring:
   rabbitmq:
-    host: ${AMQP_SERVER_HOST}
-    username: ${AMQP_USER}
-    password: ${AMQP_PASSWORD}
+    host: ${amqp.server.host}
+    username: ${amqp.user}
+    password: ${amqp.password}
     listener:
       simple:
-        concurrency: ${AMQP_SERVER_CONCURRENCY}
-        max-concurrency: ${AMQP_SERVER_MAX_CONCURRENCY}
+        concurrency: ${amqp.server.concurrency}
+        max-concurrency: ${amqp.server.max.concurrency}
         prefetch: 1
     publisher-confirm-type: correlated
 
@@ -14,14 +14,14 @@ verapdf:
   rabbitmq:
     queues:
       result-queue:
-        name: ${AMQP_SERVER_SENDING_QUEUE_NAME}
-        max-size: ${AMQP_SERVER_SENDING_QUEUE_MAX_SIZE}
+        name: ${amqp.server.sending.queue.name}
+        max-size: ${amqp.server.sending.queue.max.size}
       listening-queue:
-        name: ${AMQP_SERVER_LISTENING_QUEUE_NAME}
-        max-size: ${AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE}
+        name: ${amqp.server.listening.queue.name}
+        max-size: ${amqp.server.listening.queue.max.size}
   files:
     worker-dir: /opt/verapdf/worker/files/
   local-storage-service:
-    uri: http://${FILE_STORAGE_HOST}:${FILE_STORAGE_PORT}/api
+    uri: http://${file.storage.host}:${file.storage.port}/api
   job-service:
-    uri: http://${JOB_SERVICE_HOST}:${JOB_SERVICE_PORT}/api
+    uri: http://${job.service.host}:${job.service.port}/api
