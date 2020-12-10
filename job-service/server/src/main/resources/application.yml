@@ -10,13 +10,13 @@ spring:
     hibernate:
       ddl-auto: validate
   rabbitmq:
-    host: ${AMQP_SERVER_HOST}
-    username: ${AMQP_USER}
-    password: ${AMQP_PASSWORD}
+    host: ${amqp.server.host}
+    username: ${amqp.user}
+    password: ${amqp.password}
     listener:
       simple:
-        concurrency: ${AMQP_SERVER_CONCURRENCY}
-        max-concurrency: ${AMQP_SERVER_MAX_CONCURRENCY}
+        concurrency: ${amqp.server.concurrency}
+        max-concurrency: ${amqp.server.max.concurrency}
         prefetch: 1
     publisher-confirm-type: correlated
 
@@ -36,8 +36,8 @@ verapdf:
   rabbitmq:
     queues:
       tasks-queue:
-        name: ${AMQP_SERVER_SENDING_QUEUE_NAME}
-        max-size: ${AMQP_SERVER_SENDING_QUEUE_MAX_SIZE}
+        name: ${amqp.server.sending.queue.name}
+        max-size: ${amqp.server.sending.queue.max.size}
       listening-queue:
-        name: ${AMQP_SERVER_LISTENING_QUEUE_NAME}
-        max-size: ${AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE}
+        name: ${amqp.server.listening.queue.name}
+        max-size: ${amqp.server.listening.queue.max.size}
