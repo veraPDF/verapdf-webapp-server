@@ -8,12 +8,12 @@ services:
       POSTGRES_PASSWORD: ${LOCAL_STORAGE_SERVICE_DATABASE_PASSWORD}
       POSTGRES_DB: verapdfdb
     volumes:
-      - type: volume
-        source: localstorage_database_data
-        target: /var/lib/postgresql/data
+        - type: volume
+          source: localstorage_database_data
+          target: /var/lib/postgresql/data
     restart: always
   file-storage:
-    image: verapdf/file-storage:latest
+    build: ../local-storage-service/server
     expose:
       - 8080
     depends_on:
@@ -41,13 +41,13 @@ services:
       POSTGRES_PASSWORD: ${JOB_SERVICE_DATABASE_PASSWORD}
       POSTGRES_DB: verapdfjobdb
     volumes:
-      - type: volume
-        source: jobservice_database_data
-        target: /var/lib/postgresql/data
+    - type: volume
+      source: jobservice_database_data
+      target: /var/lib/postgresql/data
     restart: always
 
   job-service:
-    image: verapdf/job-service:latest
+    build: ../job-service/server
     expose:
       - 8080
     depends_on:
@@ -85,12 +85,12 @@ services:
         target: /var/lib/rabbitmq/
 
   worker:
-    image: verapdf/worker:latest
+    build: ../worker
     restart: always
     depends_on:
-      - job-service
-      - file-storage
-      - queue
+    - job-service
+    - file-storage
+    - queue
     environment:
       AMQP_SERVER_HOST: queue
       AMQP_USER: ${AMQP_SERVER_USER}
