@@ -30,3 +30,12 @@ verapdf:
   files:
     min-space-threshold: ${localstorage.disk.min.space.threshold:5GB}
     base-dir: /opt/verapdf/localstorageservice/files
+
+springdoc:
+  api-docs:
+    path: /files/docs
+    enabled: true
+  swagger-ui:
+    path: /files/swagger
+    operations-sorter: method
+    enabled: true

@@ -13,6 +13,7 @@
 
     <properties>
         <java.version>11</java.version>
+        <springdoc-ui.version>1.5.4</springdoc-ui.version>
     </properties>
 
     <dependencies>
@@ -52,6 +53,11 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>${springdoc-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
