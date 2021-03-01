@@ -30,13 +30,14 @@ public class FileController {
 		this.storedFileService = storedFileService;
 	}
 
-	@PostMapping
+	@PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
 	public ResponseEntity<StoredFileDTO> uploadFile(@RequestPart("file") MultipartFile file,
-	                                @RequestPart(required = false) @Pattern(regexp = "^[\\da-fA-F]{32}$") String contentMD5) throws VeraPDFBackendException {
+	                                                @RequestPart(required = false)
+	                                                @Pattern(regexp = "^[\\da-fA-F]{32}$") String contentMD5) throws VeraPDFBackendException {
 		StoredFileDTO storedFileDTO = storedFileService.saveStoredFile(file, contentMD5);
 		URI uri = MvcUriComponentsBuilder
 				.fromMethodName(FileController.class,
-						"getFileData", storedFileDTO.getId())
+				                "getFileData", storedFileDTO.getId())
 				.build()
 				.encode()
 				.toUri();

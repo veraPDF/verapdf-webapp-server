@@ -41,3 +41,12 @@ verapdf:
       listening-queue:
         name: ${amqp.server.listening.queue.name}
         max-size: ${amqp.server.listening.queue.max.size}
+
+springdoc:
+  api-docs:
+    path: /jobs/docs
+    enabled: true
+  swagger-ui:
+    path: /jobs/swagger
+    operations-sorter: method
+    enabled: true
