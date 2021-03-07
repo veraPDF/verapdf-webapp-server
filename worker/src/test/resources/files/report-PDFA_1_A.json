@@ -1,9 +1,9 @@
 {
   "details":
   {
-    "passedRules":106,
+    "passedRules":104,
     "failedRules":1,
-    "passedChecks":256,
+    "passedChecks":257,
     "failedChecks":1,
     "ruleSummaries":
     [
@@ -21,8 +21,11 @@
         "checks":
         [
           {
-            "status":"failed",
-            "context":"root"
+            "status": "failed",
+            "location": null,
+            "context": "root",
+            "errorMessage": "/Marked entry of the MarkInfo dictionary is not present in the document catalog or is set to false",
+            "errorArguments": []
           }
         ]
       }

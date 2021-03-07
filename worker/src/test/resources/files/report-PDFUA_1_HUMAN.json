@@ -1,13 +1,12 @@
 {
-  "details":
-  {
-    "passedRules":1,
-    "failedRules":0,
-    "passedChecks":0,
-    "failedChecks":0,
-    "ruleSummaries":[]
+  "details": {
+    "passedRules": 1,
+    "failedRules": 0,
+    "passedChecks": 0,
+    "failedChecks": 0,
+    "ruleSummaries": []
   },
-  "profileName":"PDF/UA-1 validation profile (Human)",
-  "statement":"PDF file is compliant with Validation Profile requirements.",
-  "compliant":true
+  "profileName": "PDF/UA-1 validation profile (Human)",
+  "statement": "PDF file is compliant with Validation Profile requirements.",
+  "compliant": true
 }

@@ -15,7 +15,8 @@
 
     <properties>
         <java.version>11</java.version>
-        <verapdf.version>2.0.62</verapdf.version>
+        <verapdf.version>1.19.25</verapdf.version>
+        <verapdf-wcag.version>1.19.23</verapdf-wcag.version>
     </properties>
 
     <repositories>
@@ -69,6 +70,11 @@
             <groupId>org.verapdf.apps</groupId>
             <artifactId>greenfield-apps</artifactId>
             <version>${verapdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.verapdf</groupId>
+            <artifactId>wcag-validation</artifactId>
+            <version>${verapdf-wcag.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
