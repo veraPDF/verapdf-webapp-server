@@ -3,14 +3,18 @@ package org.verapdf.webapp.worker.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompare;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.util.Assert;
 import org.verapdf.processor.reports.ValidationReport;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
@@ -55,7 +59,7 @@ public class VeraPdfProcessorTests {
 		ValidationReport validationReport
 				= veraPDFProcessor.validate(fileToValidatePath.toFile(), profile);
 		String validationReportAsJson = writeValidationReportAsJson(validationReport);
-		JSONAssert.assertEquals(expectedReportAsString, validationReportAsJson, false);
+			Assertions.assertTrue(JSONCompare.compareJSON(expectedReportAsString, validationReportAsJson, JSONCompareMode.NON_EXTENSIBLE).passed());
 	}
 
 	private String writeValidationReportAsJson(ValidationReport validationReport) {

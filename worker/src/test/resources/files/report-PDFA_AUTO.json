@@ -1,34 +1,34 @@
 {
-  "details":
-  {
-    "passedRules":106,
-    "failedRules":1,
-    "passedChecks":256,
-    "failedChecks":1,
-    "ruleSummaries":
-    [
+  "details": {
+    "passedRules": 104,
+    "failedRules": 1,
+    "passedChecks": 257,
+    "failedChecks": 1,
+    "ruleSummaries": [
       {
-        "ruleStatus":"FAILED",
-        "specification":"ISO 19005-1:2005",
-        "clause":"6.8.2",
-        "testNumber":1,
-        "status":"failed",
-        "passedChecks":0,
-        "failedChecks":1,
-        "description":"The document catalog dictionary shall include a MarkInfo dictionary with a Marked entry in it, whose value shall be true.",
-        "object":"CosDocument",
-        "test":"Marked == true",
-        "checks":
-        [
+        "ruleStatus": "FAILED",
+        "specification": "ISO 19005-1:2005",
+        "clause": "6.8.2",
+        "testNumber": 1,
+        "status": "failed",
+        "passedChecks": 0,
+        "failedChecks": 1,
+        "description": "The document catalog dictionary shall include a MarkInfo dictionary with a Marked entry in it, whose value shall be true.",
+        "object": "CosDocument",
+        "test": "Marked == true",
+        "checks": [
           {
-            "status":"failed",
-            "context":"root"
+            "status": "failed",
+            "location": null,
+            "context": "root",
+            "errorMessage": "/Marked entry of the MarkInfo dictionary is not present in the document catalog or is set to false",
+            "errorArguments": []
           }
         ]
       }
     ]
   },
-  "profileName":"PDF/A-1A validation profile",
-  "statement":"PDF file is not compliant with Validation Profile requirements.",
-  "compliant":false
+  "profileName": "PDF/A-1A validation profile",
+  "statement": "PDF file is not compliant with Validation Profile requirements.",
+  "compliant": false
 }

@@ -26,6 +26,7 @@ import org.verapdf.webapp.localstorageservice.client.service.LocalStorageService
 import org.verapdf.webapp.localstorageservice.model.dto.StoredFileDTO;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
+import org.verapdf.webapp.tool.FilesTool;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -88,7 +89,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.doReturn(createReportFileDescriptor(fileId))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+						eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"397856eb-10fb-48c1-ad45-c90e418f070a\","
@@ -101,8 +102,8 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
-		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+    		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
+				eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -584,7 +585,7 @@ public class ExecutableTaskWorkerTests {
 				"internal exception during saving file report".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+						eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -600,7 +601,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+				eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -625,7 +626,7 @@ public class ExecutableTaskWorkerTests {
 				"incorrect parameters".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+						eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -641,7 +642,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+				eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
@@ -665,7 +666,7 @@ public class ExecutableTaskWorkerTests {
 				HttpStatus.REQUEST_TIMEOUT.value(), "", null, "request timeout".getBytes(), null))
 				.when(localStorageServiceClient)
 				.saveFile(argThat(new FileAsJsonMatcher(expectedReportAsString)),
-						eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+						eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 
 		executableTaskWorker.handleMessage(
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
@@ -681,7 +682,7 @@ public class ExecutableTaskWorkerTests {
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(localStorageServiceClient).saveFile(any(File.class),
-				eq("bb8da2c5f6b9c3f7878996847f448ceb"), eq(MediaType.APPLICATION_JSON));
+				eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 	}
 
