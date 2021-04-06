@@ -17,6 +17,7 @@ import org.verapdf.webapp.worker.entity.ProfileMapper;
 import org.verapdf.webapp.worker.error.exception.VeraPDFProcessingException;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 
@@ -44,7 +45,7 @@ public class VeraPdfProcessor {
 	}
 
 	public ValidationReport validate(File source, Profile profile) throws VeraPDFProcessingException {
-		try (InputStream is = Files.newInputStream(source.toPath())) {
+		try (InputStream is = new FileInputStream(source)) {
 			ValidationResult validationResult;
 			if (profile == Profile.PDFA_AUTO) {
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(is);
@@ -59,7 +60,7 @@ public class VeraPdfProcessor {
 					throw new IllegalArgumentException(
 							"Missing validation profile for " + profile.name());
 				}
-				try (PDFAParser parser = Foundries.defaultInstance().createParser(is, validationProfile.getPDFAFlavour());
+				try (PDFAParser parser = Foundries.defaultInstance().createParser(source, validationProfile.getPDFAFlavour());
 				     PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, false)) {
 					validationResult = validator.validate(parser);
 				}
