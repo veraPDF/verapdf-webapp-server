@@ -1,8 +1,8 @@
 {
   "details": {
-    "passedRules": 87,
+    "passedRules": 89,
     "failedRules": 5,
-    "passedChecks": 24,
+    "passedChecks": 26,
     "failedChecks": 10,
     "ruleSummaries": [
       {
