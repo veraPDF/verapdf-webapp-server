@@ -1,9 +1,9 @@
 {
   "details":
   {
-    "passedRules":3,
+    "passedRules":7,
     "failedRules":0,
-    "passedChecks":3,
+    "passedChecks":5,
     "failedChecks":0,
     "ruleSummaries":[]
   },
