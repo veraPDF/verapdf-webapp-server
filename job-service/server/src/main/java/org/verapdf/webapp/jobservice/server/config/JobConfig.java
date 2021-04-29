@@ -10,6 +10,7 @@ import org.verapdf.webapp.queueclient.handler.QueueListenerHandler;
 import org.verapdf.webapp.queueclient.handler.QueueSenderErrorEventHandler;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
+import org.verapdf.webapp.queueclient.util.QueueUtil;
 
 import java.util.List;
 
@@ -30,5 +31,10 @@ public class JobConfig {
 	public QueueListener queueListener(AmqpAdmin amqpAdmin,
 	                                   List<QueueListenerHandler> queueListenerHandlers) {
 		return new QueueListener(amqpAdmin, queueListenerHandlers);
+	}
+
+	@Bean
+	public QueueUtil queueUtil() {
+		return QueueUtil.getInstance();
 	}
 }

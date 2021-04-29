@@ -19,7 +19,6 @@ import org.verapdf.webapp.worker.error.exception.VeraPDFProcessingException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
 
 @Service
 public class VeraPdfProcessor {

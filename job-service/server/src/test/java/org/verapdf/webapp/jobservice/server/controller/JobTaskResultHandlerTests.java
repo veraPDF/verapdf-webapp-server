@@ -1,9 +1,11 @@
 package org.verapdf.webapp.jobservice.server.controller;
 
 import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,16 +25,17 @@ import org.verapdf.webapp.queueclient.entity.QueueErrorEventType;
 import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorData;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
+import org.verapdf.webapp.queueclient.util.QueueUtil;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class JobTaskResultHandlerTests {
+class JobTaskResultHandlerTests {
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -51,238 +54,315 @@ public class JobTaskResultHandlerTests {
 	@MockBean
 	private QueueListener queueListener;
 
+	@MockBean
+	private QueueUtil queueUtil;
+
 	@BeforeEach
 	public void cleanJobsAndTasks() {
 		jobRepository.deleteAll();
 		jobTaskRepository.deleteAll();
 	}
 
-	@Test
-	public void invalidMessageOnHandleMessageTest() {
-		jobTaskResultHandler.handleMessage("Invalid message");
-
-		assertDBEmpty();
+	@AfterEach
+	public void checkWorkingDirectory() {
+		Mockito.verifyNoMoreInteractions(queueUtil);
+		Mockito.validateMockitoUsage();
 	}
 
 	@Test
-	public void nullFileIdOnHandleMessageTest() {
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+	void invalidMessageOnHandleMessageTest() {
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .rejectAndDiscardJob(null, 1, null, null);
+
+		jobTaskResultHandler.handleMessage("Invalid message", null, 1);
 
 		assertDBEmpty();
+
+		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, null, null);
 	}
 
 	@Test
-	public void nullJobIdOnHandleMessageTest() {
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":null,"
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+	void nullFileIdOnHandleMessageTest() {
+		UUID jobId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, null);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		assertDBEmpty();
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, null);
 	}
 
 	@Test
-	public void jobDoesNotExistInDatabaseOnHandleMessageTest() {
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+	void nullJobIdOnHandleMessageTest() {
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, null, fileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":null,"
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		assertDBEmpty();
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, null, fileId);
 	}
 
 	@Test
-	public void taskDoesNotExistInDatabaseOnHandleMessageTest() {
+	void jobDoesNotExistInDatabaseOnHandleMessageTest() {
+		UUID jobId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
+
+		assertDBEmpty();
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+	}
+
+	@Test
+	void taskDoesNotExistInDatabaseOnHandleMessageTest() {
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+
 		Job job = new Job(Profile.TAGGED_PDF);
 		job = jobRepository.saveAndFlush(job);
+		UUID jobId = job.getId();
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + job.getId() + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + jobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		Assertions.assertEquals(1, jobRepository.count());
 		Assertions.assertEquals(0, jobTaskRepository.count());
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	@Test
-	public void theSameTaskWithValidationResultAndProcessingError() throws Exception {
+	void theSameTaskWithValidationResultAndProcessingError() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID firstFileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, UUID.fromString(uploadedJobId), firstFileId);
 
-		//Getting job
-		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
-
-
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
-						+ "\"errorMessage\":\"no body\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
-						"'errorMessage':'no body'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
+
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
+		                                   + "\"errorMessage\":\"no body\"}", null, 1);
+
+		//Getting job
+		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
+		                                 "'errorMessage':'no body'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil, Mockito.times(2))
+		       .applyAndDiscardJob(null, 1, jobId, firstFileId);
+//		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, firstFileId);
 	}
 
 	@Test
-	public void theSameTaskWithSendingErrorAndValidationResult() throws Exception {
+	void theSameTaskWithSendingErrorAndValidationResult() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
 
 		String message = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 		String responseMessage = "Message: " + message + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                         " into the queue \\'queueName\\', cause: cause";
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage + "'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage + "'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	@Test
-	public void invalidMessageOnHandleEventTest() {
+	void invalidMessageOnHandleEventTest() {
 		String message = "Invalid message";
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, null, null);
+
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 
 		assertDBEmpty();
 	}
 
 	@Test
-	public void nullFileIdOnHandleEventTest() {
+	void nullFileIdOnHandleEventTest() {
 		String message = "{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-				+ "\"fileId\":null,"
-				+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
+		                 + "\"fileId\":null,"
+		                 + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 
 		assertDBEmpty();
 	}
 
 	@Test
-	public void nullJobIdOnHandleEventTest() {
+	void nullJobIdOnHandleEventTest() {
 		String message = "{\"jobId\":null,"
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 
 		assertDBEmpty();
 	}
 
 	@Test
-	public void jobDoesNotExistInDatabaseOnHandleEventTest() {
+	void jobDoesNotExistInDatabaseOnHandleEventTest() {
 		String message = "{\"jobId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 
 		assertDBEmpty();
 	}
 
 	@Test
-	public void taskDoesNotExistInDatabaseOnHandleEventTest() {
+	void taskDoesNotExistInDatabaseOnHandleEventTest() {
 		Job job = new Job(Profile.TAGGED_PDF);
 		job = jobRepository.saveAndFlush(job);
 
 		String message = "{\"jobId\":\"" + job.getId() + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 
 		Assertions.assertEquals(1, jobRepository.count());
@@ -290,417 +370,487 @@ public class JobTaskResultHandlerTests {
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID firstFileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+		UUID secondFileId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, secondFileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, secondFileId);
 	}
 
 	@Test
-	public void createStartAndGetJobWithExecutedSingleTasksTest() throws Exception {
+	void createStartAndGetJobWithExecutedSingleTasksTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithTasksProcessingErrorsTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithTasksProcessingErrorsTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID firstFileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+		UUID secondFileId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
-						+ "\"errorMessage\":\"no body\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, secondFileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
+		                                   + "\"errorMessage\":\"no body\"}", null, 1);
 
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"errorType\":\"PROCESSING_INTERNAL_ERROR\","
-						+ "\"errorMessage\":\"some message\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"PROCESSING_INTERNAL_ERROR\","
+		                                   + "\"errorMessage\":\"some message\"}", null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
-						"'errorMessage':'no body'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'PROCESSING_INTERNAL_ERROR'," +
-						"'errorMessage':'some message'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
+		                                 "'errorMessage':'no body'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'PROCESSING_INTERNAL_ERROR'," +
+		                                 "'errorMessage':'some message'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, secondFileId);
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithTaskProcessingErrorAndWithoutErrorTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithTaskProcessingErrorAndWithoutErrorTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID firstFileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
+		UUID secondFileId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, secondFileId);
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
-						+ "\"errorMessage\":\"no body\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
+		                                   + "\"errorMessage\":\"no body\"}", null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
-						"'errorMessage':'no body'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
+		                                 "'errorMessage':'no body'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, firstFileId);
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, secondFileId);
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithSingleTaskProcessingErrorTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithSingleTaskProcessingErrorTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID fileId = UUID.fromString("534bd16b-6bd5-404e-808e-5dc731c73963");
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-						+ "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
-						+ "\"errorMessage\":\"no body\"}");
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
+
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
+		                                   + "\"errorMessage\":\"no body\"}", null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
-						"'errorMessage':'no body'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'FILE_OBTAINING_TO_PROCESS_ERROR'," +
+		                                 "'errorMessage':'no body'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithSendingErrorsTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithSendingErrorsTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
 
 		String message1 = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                  + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                  + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData1
 				= new SendingToQueueErrorData("queueName", message1,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData1);
 
 		String message2 = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                  + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                  + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData2
 				= new SendingToQueueErrorData("queueName", message2,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData2);
 
 		String responseMessage1 = "Message: " + message1 + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                          " into the queue \\'queueName\\', cause: cause";
 		String responseMessage2 = "Message: " + message2 + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                          " into the queue \\'queueName\\', cause: cause";
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage1 + "'" +
-						"}," +
-						"{" +
-						"'fileId':'774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage2 + "'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage1 + "'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId':'774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage2 + "'" +
+		                                 "}" +
+		                                 "]}", true));
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithSendingErrorAndWithoutErrorTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithSendingErrorAndWithoutErrorTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID fileId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
 
 		String message = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 		String responseMessage = "Message: " + message + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                         " into the queue \\'queueName\\', cause: cause";
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}",
+		                                   null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage + "'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'FINISHED'," +
-						"'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage + "'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'validationResultId':'d39da7b6-3665-4374-84e2-70c1e24e7029'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithSingleSendingErrorTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithSingleSendingErrorTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
 
 		String message = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 		String responseMessage = "Message: " + message + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                         " into the queue \\'queueName\\', cause: cause";
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage + "'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage + "'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
 	}
 
 	@Test
-	public void createStartAndGetExecutedJobWithTasksWithSendingErrorAndTaskProcessingErrorTest() throws Exception {
+	void createStartAndGetExecutedJobWithTasksWithSendingErrorAndTaskProcessingErrorTest() throws Exception {
 		String uploadedJobId = createStartGetJobWithTasksAndReturnJobId();
+		UUID jobId = UUID.fromString(uploadedJobId);
+		UUID fileId = UUID.fromString("774bd16b-7ad5-354e-808e-5dc731c73963");
+
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .applyAndDiscardJob(null, 1, jobId, fileId);
 
 		String message = "{\"jobId\":\"" + uploadedJobId + "\","
-				+ "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
-				+ "\"profile\":\"TAGGED_PDF\"}";
+		                 + "\"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\","
+		                 + "\"profile\":\"TAGGED_PDF\"}";
 		SendingToQueueErrorData sendingToQueueErrorData
 				= new SendingToQueueErrorData("queueName", message,
-				QueueErrorEventType.SENDING_ERROR_CALLBACK, "cause", null);
+				                              QueueErrorEventType.SENDING_ERROR_CALLBACK,
+				                              "cause", null);
 		jobTaskResultHandler.handleEvent(sendingToQueueErrorData);
 		String responseMessage = "Message: " + message + " cannot be send" +
-				" into the queue \\'queueName\\', cause: cause";
+		                         " into the queue \\'queueName\\', cause: cause";
 
-		jobTaskResultHandler.handleMessage(
-				"{\"jobId\":\"" + uploadedJobId + "\","
-						+ "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
-						+ "\"errorType\":\"PROCESSING_INTERNAL_ERROR\","
-						+ "\"errorMessage\":\"some message\"}");
+		jobTaskResultHandler.handleMessage("{\"jobId\":\"" + uploadedJobId + "\","
+		                                   + "\"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\","
+		                                   + "\"errorType\":\"PROCESSING_INTERNAL_ERROR\","
+		                                   + "\"errorMessage\":\"some message\"}", null, 1);
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'FINISHED'," +
-						"'tasks':[{" +
-						"'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'SENDING_TO_QUEUE_ERROR'," +
-						"'errorMessage':'" + responseMessage + "'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'ERROR'," +
-						"'errorType':'PROCESSING_INTERNAL_ERROR'," +
-						"'errorMessage':'some message'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'FINISHED'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'SENDING_TO_QUEUE_ERROR'," +
+		                                 "'errorMessage':'" + responseMessage + "'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'ERROR'," +
+		                                 "'errorType':'PROCESSING_INTERNAL_ERROR'," +
+		                                 "'errorMessage':'some message'" +
+		                                 "}" +
+		                                 "]}", true));
+
+		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
 	}
 
 	private String createStartGetJobWithTasksAndReturnJobId() throws Exception {
 		String requestBody = "{\"profile\": \"TAGGED_PDF\"," +
-				"\"tasks\": [" +
-				"    {" +
-				"    \"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\"" +
-				"    }," +
-				"    {" +
-				"    \"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\"" +
-				"    }" +
-				"]" +
-				"}";
+		                     "\"tasks\": [" +
+		                     "    {" +
+		                     "    \"fileId\":\"534bd16b-6bd5-404e-808e-5dc731c73963\"" +
+		                     "    }," +
+		                     "    {" +
+		                     "    \"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\"" +
+		                     "    }" +
+		                     "]" +
+		                     "}";
 
 		//Creating job
 		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/jobs")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(requestBody))
-				.andExpect(status().isCreated())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.id").isNotEmpty())
-				.andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
-				.andExpect(jsonPath("$.status").value("CREATED"))
-				.andExpect(jsonPath("$.tasks").isArray())
-				.andExpect(jsonPath("$.tasks.length()").value(2))
-				.andExpect(jsonPath("$.tasks[0].fileId")
-						.value("534bd16b-6bd5-404e-808e-5dc731c73963"))
-				.andExpect(jsonPath("$.tasks[0].status").value("CREATED"))
-				.andExpect(jsonPath("$.tasks[1].fileId")
-						.value("774bd16b-7ad5-354e-808e-5dc731c73963"))
-				.andExpect(jsonPath("$.tasks[1].status").value("CREATED"))
-				.andReturn();
+		                                                         .contentType(MediaType.APPLICATION_JSON)
+		                                                         .content(requestBody))
+		                          .andExpect(status().isCreated())
+		                          .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+		                          .andExpect(jsonPath("$.id").isNotEmpty())
+		                          .andExpect(jsonPath("$.profile").value("TAGGED_PDF"))
+		                          .andExpect(jsonPath("$.status").value("CREATED"))
+		                          .andExpect(jsonPath("$.tasks").isArray())
+		                          .andExpect(jsonPath("$.tasks.length()").value(2))
+		                          .andExpect(jsonPath("$.tasks[0].fileId")
+				                                     .value("534bd16b-6bd5-404e-808e-5dc731c73963"))
+		                          .andExpect(jsonPath("$.tasks[0].status").value("CREATED"))
+		                          .andExpect(jsonPath("$.tasks[1].fileId")
+				                                     .value("774bd16b-7ad5-354e-808e-5dc731c73963"))
+		                          .andExpect(jsonPath("$.tasks[1].status").value("CREATED"))
+		                          .andReturn();
 
 		String jsonResponse = result.getResponse().getContentAsString();
 		String uploadedJobId = JsonPath.read(jsonResponse, "$.id");
 
 		assertEquals("http://localhost/jobs/" + uploadedJobId,
-				result.getResponse().getHeader("Location"));
+		             result.getResponse().getHeader("Location"));
 
 		//Starting job
 		mockMvc.perform(MockMvcRequestBuilders.post("/jobs/" + uploadedJobId + "/execution")
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
 
 		//Getting job
 		mockMvc.perform(MockMvcRequestBuilders.get("/jobs/" + uploadedJobId)
-				.accept(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'TAGGED_PDF'," +
-						"'status':'PROCESSING'," +
-						"'tasks':[{" +
-						"'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}," +
-						"{" +
-						"'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-						"'status':'PROCESSING'" +
-						"}" +
-						"]}", true));
+		                                      .accept(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(status().isOk())
+		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
+		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
+		                                 "'profile':'TAGGED_PDF'," +
+		                                 "'status':'PROCESSING'," +
+		                                 "'tasks':[{" +
+		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}," +
+		                                 "{" +
+		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
+		                                 "'status':'PROCESSING'" +
+		                                 "}" +
+		                                 "]}", true));
 
 		return uploadedJobId;
 	}

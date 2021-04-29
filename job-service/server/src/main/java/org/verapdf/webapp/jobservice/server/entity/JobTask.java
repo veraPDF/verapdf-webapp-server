@@ -15,6 +15,8 @@ public class JobTask {
 	@Id
 	@Column(name = "file_id")
 	private UUID fileId;
+	@Column(name = "processing_count")
+	private int processingCount;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	private TaskStatus status;
@@ -48,6 +50,14 @@ public class JobTask {
 
 	public void setJob(Job job) {
 		this.job = job;
+	}
+
+	public int getProcessingCount() {
+		return processingCount;
+	}
+
+	public void setProcessingCount(int processingCount) {
+		this.processingCount = processingCount;
 	}
 
 	public TaskStatus getStatus() {
