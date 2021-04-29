@@ -3,7 +3,6 @@ package org.verapdf.webapp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -29,15 +28,14 @@ public class QueueClientHealthcheckCliApplication {
 
 	private static ConfigurableApplicationContext context;
 
-	private QueueSender queueSender;
-	private QueueListenerHandlerImpl queueListener;
-	private QueueSenderHandlerImpl handler;
+	private final QueueSender queueSender;
+	private final QueueListenerHandlerImpl queueListener;
+	private final QueueSenderHandlerImpl handler;
 
-	private Set<String> sentMessages = new HashSet<>();
+	private final Set<String> sentMessages = new HashSet<>();
 
 	@Autowired
-	public QueueClientHealthcheckCliApplication(QueueSender queueSender,
-	                                            QueueListenerHandlerImpl queueListener,
+	public QueueClientHealthcheckCliApplication(QueueSender queueSender, QueueListenerHandlerImpl queueListener,
 	                                            QueueSenderHandlerImpl handler) {
 		this.queueSender = queueSender;
 		this.queueListener = queueListener;
@@ -47,7 +45,7 @@ public class QueueClientHealthcheckCliApplication {
 	@EventListener(ApplicationReadyEvent.class)
 	@Async
 	public void createAndSendTasks() {
-		for(int i = 0; i < 30; i++) {
+		for (int i = 0; i < 30; i++) {
 			String jobId = UUID.randomUUID().toString();
 			queueSender.sendMessage(jobId);
 			sentMessages.add(jobId);
@@ -58,11 +56,10 @@ public class QueueClientHealthcheckCliApplication {
 			LOGGER.info("Caught exception while waiting for sending all jobsId to sender.");
 		}
 
-		int exitCode = SpringApplication.exit(context,
-				(ExitCodeGenerator) () -> checkCorrectSendingAndReceivingJobs(
-						sentMessages,
-						queueListener.getSuccessfullyReceivedMessages(),
-						handler.getUnsuccessfullyReceivedMessages()));
+		int exitCode = SpringApplication.exit(context, () -> checkCorrectSendingAndReceivingJobs(
+				sentMessages,
+				queueListener.getSuccessfullyReceivedMessages(),
+				handler.getUnsuccessfullyReceivedMessages()));
 
 		System.exit(exitCode);
 	}
@@ -70,7 +67,7 @@ public class QueueClientHealthcheckCliApplication {
 	private static int checkCorrectSendingAndReceivingJobs(Set<String> allSentMessages,
 	                                                       Set<String> sentSuccessfulMessages,
 	                                                       Set<String> sentUnsuccessfulMessages) {
-		Set<String> receivedMessages = new HashSet <>(sentSuccessfulMessages);
+		Set<String> receivedMessages = new HashSet<>(sentSuccessfulMessages);
 		receivedMessages.addAll(sentUnsuccessfulMessages);
 
 		return allSentMessages.equals(receivedMessages) ? 0 : 1;

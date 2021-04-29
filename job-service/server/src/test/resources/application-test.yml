@@ -13,3 +13,7 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+verapdf:
+  task:
+    processing-limit: 2

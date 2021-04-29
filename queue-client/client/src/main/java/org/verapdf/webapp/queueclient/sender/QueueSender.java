@@ -1,6 +1,9 @@
 package org.verapdf.webapp.queueclient.sender;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.util.unit.DataSize;
@@ -34,14 +37,15 @@ public class QueueSender {
 		try {
 			CorrelationData correlationData = new CorrelationData(sendingQueueName);
 			rabbitTemplate.convertAndSend(sendingQueueName, message,
-					rabbitMessage -> {
-						rabbitMessage.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-						correlationData.setReturnedMessage(rabbitMessage);
-						return rabbitMessage;
-					}, correlationData);
+			                              rabbitMessage -> {
+				                              rabbitMessage.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+				                              correlationData.setReturnedMessage(rabbitMessage);
+				                              return rabbitMessage;
+			                              }, correlationData);
 		} catch (Exception e) {
-			handleSendToQueueError(new SendingToQueueErrorData(sendingQueueName,
-					message, QueueErrorEventType.SENDING_EXCEPTION, e.getMessage(), e));
+			handleSendToQueueError(new SendingToQueueErrorData(sendingQueueName, message,
+			                                                   QueueErrorEventType.SENDING_EXCEPTION,
+			                                                   e.getMessage(), e));
 		}
 	}
 
@@ -66,10 +70,9 @@ public class QueueSender {
 			}
 		});
 
-		amqpAdmin.declareQueue(QueueBuilder
-				.durable(sendingQueueName)
-				.overflow(QueueBuilder.Overflow.rejectPublish)
-				.maxLengthBytes((int) sendingQueueSize.toBytes())
-				.build());
+		amqpAdmin.declareQueue(QueueBuilder.durable(sendingQueueName)
+		                                   .overflow(QueueBuilder.Overflow.rejectPublish)
+		                                   .maxLengthBytes((int) sendingQueueSize.toBytes())
+		                                   .build());
 	}
 }
