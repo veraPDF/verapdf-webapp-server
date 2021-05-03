@@ -46,10 +46,10 @@ public class ProfileMapper {
 				Profiles.profileFromXml(getClass().getResourceAsStream(
 						"/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1.xml"
 				)));
-		this.profilesMap.put(Profile.PDFUA_1_HUMAN,
-				Profiles.profileFromXml(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1-Human.xml"
-				)));
+//		this.profilesMap.put(Profile.PDFUA_1_HUMAN,
+//				Profiles.profileFromXml(getClass().getResourceAsStream(
+//						"/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1-Human.xml"
+//				)));
 		this.profilesMap.put(Profile.TAGGED_PDF,
 				Profiles.profileFromXml(getClass().getResourceAsStream(
 						"/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32000-1-Tagged.xml"
