@@ -21,7 +21,7 @@ server:
 management:
   endpoints:
     web:
-      base-path: /status
+      base-path: /status/file-storage
 
 verapdf:
   cleaning:
