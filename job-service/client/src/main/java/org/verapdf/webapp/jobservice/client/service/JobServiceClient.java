@@ -1,5 +1,6 @@
 package org.verapdf.webapp.jobservice.client.service;
 
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
@@ -13,6 +14,7 @@ public class JobServiceClient {
 
 	public JobServiceClient(URI uriToJobService) {
 		this.restTemplate = new RestTemplate();
+		this.restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 		this.uriToJobService = uriToJobService;
 	}
 
@@ -22,22 +24,30 @@ public class JobServiceClient {
 	 * @param jobId - id of the requested job
 	 * @return requested job
 	 * @throws {@code RestClientResponseException} throws in case when request failed.
-	 * Possible cases:
-	 *  400 BAD_REQUEST - incorrect type of parameters for used path.
-	 *  404 NOT_FOUND - job wasn't found
+	 *                Possible cases:
+	 *                400 BAD_REQUEST - incorrect type of parameters for used path.
+	 *                404 NOT_FOUND - job wasn't found
 	 */
 	public JobDTO getJobById(UUID jobId) {
 		if (jobId == null) {
 			return null;
 		}
 
-		return restTemplate
-				.getForEntity(UriComponentsBuilder
-								.fromUri(uriToJobService)
-								.path("/jobs/{jobId}")
-								.buildAndExpand(jobId.toString())
-								.toUri(),
-						JobDTO.class)
-				.getBody();
+		return restTemplate.getForEntity(UriComponentsBuilder.fromUri(uriToJobService)
+		                                                     .path("/jobs/{jobId}")
+		                                                     .buildAndExpand(jobId.toString())
+		                                                     .toUri(), JobDTO.class)
+		                   .getBody();
+	}
+
+	public Integer increaseTaskProcessingCount(UUID jobId, UUID fileId) {
+		if (jobId == null || fileId == null) {
+			return null;
+		}
+
+		return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
+		                                                       .path("/jobs/{jobId}/increaseTaskProcessingCount/file/{fileId}")
+		                                                       .buildAndExpand(jobId.toString(), fileId.toString())
+		                                                       .toUri(), null, Integer.class);
 	}
 }

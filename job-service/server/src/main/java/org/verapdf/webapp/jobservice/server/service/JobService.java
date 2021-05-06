@@ -13,6 +13,7 @@ import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
 import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskDTO;
+import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskResultDTO;
 import org.verapdf.webapp.jobservice.model.dto.JobDTO;
 import org.verapdf.webapp.jobservice.model.entity.enums.JobStatus;
 import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
@@ -35,20 +36,28 @@ public class JobService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JobService.class);
 
 	private final int jobLifetimeDays;
+	private final int processingLimit;
+
 	private final JobRepository jobRepository;
 	private final JobTaskRepository taskRepository;
+
 	private final QueueSender queueSender;
+	private final JobTaskResultHandler jobTaskResultHandler;
+
 	private final JobMapper jobMapper;
 	private final ObjectMapper objectMapper;
 
 	public JobService(@Value("${verapdf.cleaning.lifetime-delay-days}") int jobLifetimeDays,
+	                  @Value("${verapdf.task.processing-limit}") int processingLimit,
 	                  JobRepository jobRepository, JobTaskRepository taskRepository,
-	                  QueueSender queueSender, JobMapper jobMapper,
+	                  QueueSender queueSender, JobTaskResultHandler jobTaskResultHandler, JobMapper jobMapper,
 	                  ObjectMapper objectMapper) {
 		this.jobLifetimeDays = jobLifetimeDays;
+		this.processingLimit = processingLimit;
 		this.jobRepository = jobRepository;
 		this.taskRepository = taskRepository;
 		this.queueSender = queueSender;
+		this.jobTaskResultHandler = jobTaskResultHandler;
 		this.jobMapper = jobMapper;
 		this.objectMapper = objectMapper;
 	}
@@ -64,6 +73,34 @@ public class JobService {
 	public JobDTO getJobById(UUID jobId) throws NotFoundException {
 		Job job = findJobById(jobId);
 		return jobMapper.createDTOFromEntity(job);
+	}
+
+	@Transactional
+	public int increaseTaskProcessingCount(UUID jobId, UUID fileId) throws NotFoundException, BadRequestException, ConflictException {
+		Job job = findJobById(jobId);
+		if (job.getStatus() != JobStatus.PROCESSING) {
+			throw new ConflictException("Job with id: " + job.getId() + " not in PROCESSING state");
+		}
+
+		JobTask task = job.getJobTasks()
+		                  .stream()
+		                  .filter(jobTask -> jobTask.getFileId().equals(fileId))
+		                  .findFirst()
+		                  .orElse(null);
+
+		if (task == null) {
+			jobTaskResultHandler.updateJobStatus(job);
+			throw new NotFoundException("Task in job, jobId: " + jobId + " not found in DB, taskId: " + fileId);
+		}
+
+		int processingCount = task.getProcessingCount();
+		if (processingCount >= processingLimit) {
+			handleProcessingLimit(job, jobId, fileId);
+		}
+
+		int increasedAttempts = processingCount + 1;
+		task.setProcessingCount(increasedAttempts);
+		return increasedAttempts;
 	}
 
 	@Transactional
@@ -127,12 +164,22 @@ public class JobService {
 	@Scheduled(cron = "{verapdf.cleaning.cron}")
 	public void clearJobsAndTasks() {
 		Instant expiredTime = Instant.now().minus(jobLifetimeDays, ChronoUnit.DAYS)
-				.truncatedTo(ChronoUnit.DAYS);
+		                             .truncatedTo(ChronoUnit.DAYS);
 		jobRepository.deleteAllByCreatedAtLessThan(expiredTime);
+	}
+
+	private void handleProcessingLimit(Job job, UUID jobId, UUID fileId) throws BadRequestException {
+		String errorMessage = "The number of attempts to process the task exceeded the limit";
+		ExecutableTaskDTO executableTaskDTO = new ExecutableTaskDTO(jobId, fileId);
+		ExecutableTaskResultDTO executableTaskResultDTO
+				= new ExecutableTaskResultDTO(executableTaskDTO, TaskError.TASK_PROCESSING_LIMIT_ERROR, errorMessage);
+		jobTaskResultHandler.updateTaskStatus(executableTaskResultDTO, fileId, job);
+		jobTaskResultHandler.updateJobStatus(job);
+		throw new BadRequestException(errorMessage + ", jobId: " + jobId + ", fileId: " + fileId);
 	}
 
 	private Job findJobById(UUID jobId) throws NotFoundException {
 		return jobRepository.findById(jobId)
-				.orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
+		                    .orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
 	}
 }
