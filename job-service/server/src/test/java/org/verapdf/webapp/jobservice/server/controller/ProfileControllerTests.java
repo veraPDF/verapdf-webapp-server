@@ -45,7 +45,7 @@ public class ProfileControllerTests {
 		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"PDFUA_1_HUMAN\"," +
 		                                 "\"humanReadableName\":\"PDF/UA-1 (Human)\"," +
-		                                 "\"enabled\":true}," +
+		                                 "\"enabled\":false}," +
 		                                 "{\"profileName\":\"TAGGED_PDF\"," +
 		                                 "\"humanReadableName\":\"Tagged PDF\"," +
 		                                 "\"enabled\":true}," +
