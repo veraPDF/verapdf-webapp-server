@@ -9,6 +9,7 @@ import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 
 import javax.xml.bind.JAXBException;
 import java.util.EnumMap;
+import java.util.Objects;
 
 @Component
 public class ProfileMapper {
@@ -39,25 +40,23 @@ public class ProfileMapper {
 
 		// PDF/UA related profilesMap
 		this.profilesMap.put(Profile.WCAG_2_1_COMPLETE,
-				Profiles.profileFromXml(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21-Complete.xml"
-				)));
+		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21-Complete.xml"))));
 		this.profilesMap.put(Profile.PDFUA_1_MACHINE,
-				Profiles.profileFromXml(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1.xml"
-				)));
+		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1.xml"))));
 //		this.profilesMap.put(Profile.PDFUA_1_HUMAN,
-//				Profiles.profileFromXml(getClass().getResourceAsStream(
-//						"/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1-Human.xml"
-//				)));
+//		                     Profiles.profileFromXml(getClass().getResourceAsStream(
+//				                     "/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1-Human.xml")));
 		this.profilesMap.put(Profile.TAGGED_PDF,
-				Profiles.profileFromXml(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32000-1-Tagged.xml"
-				)));
+		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32000-1-Tagged.xml"))));
 		this.profilesMap.put(Profile.WCAG_2_1,
-				Profiles.profileFromXml(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21.xml"
-				)));
+		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21.xml"))));
+		this.profilesMap.put(Profile.WCAG_2_1_DEV,
+		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21-Dev.xml"))));
 	}
 
 	public ValidationProfile getValidationProfile(Profile profile) {
