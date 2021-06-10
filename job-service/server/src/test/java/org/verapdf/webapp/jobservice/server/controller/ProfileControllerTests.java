@@ -13,12 +13,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class ProfileControllerTests {
+class ProfileControllerTests {
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -29,16 +30,19 @@ public class ProfileControllerTests {
 	private QueueListener queueListener;
 
 	@Test
-	public void getProfilesTest() throws Exception {
+	void getProfilesTest() throws Exception {
 		mockMvc.perform(MockMvcRequestBuilders.get("/profiles"))
 		       .andExpect(status().isOk())
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		       .andExpect(content().json("[" +
-				       "{\"profileName\":\"WCAG_2_1_COMPLETE\"," +
-				       "\"humanReadableName\":\"WCAG 2.1 (All)\"," +
-				       "\"enabled\":true}," +
+		                                 "{\"profileName\":\"WCAG_2_1_COMPLETE\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.1 (All)\"," +
+		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"WCAG_2_1\"," +
 		                                 "\"humanReadableName\":\"WCAG 2.1 (Extra)\"," +
+		                                 "\"enabled\":true}," +
+		                                 "{\"profileName\":\"WCAG_2_1_DEV\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.1 (DEV)\"," +
 		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"PDFUA_1_MACHINE\"," +
 		                                 "\"humanReadableName\":\"PDF/UA-1 (Machine)\"," +

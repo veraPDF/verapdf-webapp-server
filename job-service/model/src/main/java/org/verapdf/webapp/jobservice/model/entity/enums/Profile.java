@@ -6,6 +6,7 @@ public enum Profile {
 	PDFUA_1_HUMAN("PDF/UA-1 (Human)"),
 	WCAG_2_1("WCAG 2.1 (Extra)"),
 	WCAG_2_1_COMPLETE("WCAG 2.1 (All)"),
+	WCAG_2_1_DEV("WCAG 2.1 (DEV)"),
 	PDFA_1_A("PDF/A-1A"),
 	PDFA_1_B("PDF/A-1B"),
 	PDFA_2_A("PDF/A-2A"),
