@@ -13,7 +13,9 @@ services:
           target: /var/lib/postgresql/data
     restart: always
   file-storage:
-    build: ../local-storage-service/server
+    build:
+      context: ../local-storage-service/server
+      dockerfile: Dockerfile-dev
     expose:
       - 8080
     depends_on:
@@ -47,7 +49,9 @@ services:
     restart: always
 
   job-service:
-    build: ../job-service/server
+    build:
+      context: ../job-service/server
+      dockerfile: Dockerfile-dev
     expose:
       - 8080
     depends_on:
@@ -86,7 +90,9 @@ services:
         target: /var/lib/rabbitmq/
 
   worker:
-    build: ../worker
+    build:
+      context: ../worker
+      dockerfile: Dockerfile-dev
     restart: always
     depends_on:
     - job-service
