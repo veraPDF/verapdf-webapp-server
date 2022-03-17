@@ -13,7 +13,7 @@ services:
         target: /var/lib/postgresql/data
     restart: always
   file-storage:
-    image: verapdf/file-storage:latest
+    image: ghcr.io/verapdf/verapdf_file-storage:latest
     expose:
       - 8080
     depends_on:
@@ -47,7 +47,7 @@ services:
     restart: always
 
   job-service:
-    image: verapdf/job-service:latest
+    image: ghcr.io/verapdf/verapdf_job-service:latest
     expose:
       - 8080
     depends_on:
@@ -86,7 +86,7 @@ services:
         target: /var/lib/rabbitmq/
 
   worker:
-    image: verapdf/worker:latest
+    image: ghcr.io/verapdf/verapdf_worker:latest
     restart: always
     depends_on:
       - job-service
