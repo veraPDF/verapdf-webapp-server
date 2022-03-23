@@ -1,0 +1,63 @@
+name: Build with maven, create docker images and push to github registries.
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron:  '30 6,18 * * *'
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  WORKER_IMAGE_NAME: verapdf_worker
+  FILE_STORAGE_IMAGE_NAME: verapdf_file-storage
+  JOB_SERVICE_IMAGE_NAME: verapdf_job-service
+  
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+
+      - name: Update gut submodule for veraPDF-validation-profiles
+        run: git submodule update --init --recursive
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Build file-storage-service Docker image
+        run: docker build ./local-storage-service/server -f "./local-storage-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:latest
+
+      - name: Build job-service Docker image
+        run: docker build ./job-service/server -f "./job-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:latest
+
+      - name: Build worker-service Docker image
+        run: docker build ./worker -f "./worker/Dockerfile-dev" -t  $REGISTRY/verapdf/$WORKER_IMAGE_NAME:latest
+
+      - name: Login into ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Push file-storage-service Docker images to the ${{ env.REGISTRY }}
+        run : docker push $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:latest
+
+      - name: Push job-service Docker images to the ${{ env.REGISTRY }}
+        run: docker push $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:latest
+
+      - name: Push worker Docker images to the ${{ env.REGISTRY }}
+        run: docker push $REGISTRY/verapdf/$WORKER_IMAGE_NAME:latest
+      
