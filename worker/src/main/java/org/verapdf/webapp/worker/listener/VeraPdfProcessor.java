@@ -65,7 +65,7 @@ public class VeraPdfProcessor {
 				}
 			}
 			ValidationDetails details
-					= Reports.fromValues(validationResult, false, 100);
+					= Reports.fromValues(validationResult, false);
 			return Reports.createValidationReport(details,
 					validationResult.getProfileDetails().getName(),
 					getStatement(validationResult.isCompliant()),
