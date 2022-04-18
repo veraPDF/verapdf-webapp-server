@@ -1,0 +1,30 @@
+name: Increment version
+
+on:
+  pull_request:
+    types:
+      [ closed ]
+    branches:
+      [ master ]
+
+jobs:
+  increment:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+      - name: Increment versions in poms
+        run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+      - name: Get latest version
+        id: latest-version
+        run: echo "::set-output name=version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+      - name: Commit updated version
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: v${{ steps.latest-version.outputs.version }}
