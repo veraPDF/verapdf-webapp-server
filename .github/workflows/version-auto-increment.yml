@@ -17,7 +17,7 @@ jobs:
         with:
           java-version: 1.11
       - name: Increment versions in poms
-        run: mvn build-helper:parse-version versions:set -DnewVersion=/${parsedVersion.majorVersion}./${parsedVersion.minorVersion}./${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+        run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
       - name: Get latest version
         id: latest-version
         run:  mvn help:evaluate -Dexpression=project.version -q -DforceStdout
