@@ -8,10 +8,13 @@ on:
 jobs:
   increment:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
+          ref: master
       - name: Set up JDK 1.11
         uses: actions/setup-java@v1
         with:
@@ -20,9 +23,9 @@ jobs:
         run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
       - name: Get latest version
         id: latest-version
-        run:  mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+        run: echo "::set-output name=version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
       - name: Commit updated version
         uses: EndBug/add-and-commit@v9
         with:
-          message: v${{ steps.latest-version.outputs}}
+          message: v${{ steps.latest-version.outputs.version}}
           new_branch: test_incremented_version
