@@ -27,7 +27,7 @@ jobs:
           java-version: 1.11
 
       - name: Update gut submodule for veraPDF-validation-profiles
-        run: git submodule update --init --recursive
+        run: git submodule update --init --remote --recursive
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
