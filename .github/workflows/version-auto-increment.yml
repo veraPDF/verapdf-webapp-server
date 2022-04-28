@@ -1,15 +1,28 @@
-name: Increment version
+name: Increment server version
 
 on:
-  pull_request:
-    types:
-      [ closed ]
+  workflow_dispatch:
+  push:
     branches:
       [ master ]
 
+concurrency: increment_environment
+
 jobs:
+  test-commit-message:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    outputs:
+      is_version: ${{ steps.validation.outputs.is_version }}
+    steps:
+      - id: validation
+        run: echo "::set-output name=is_version::$([[ '${{ github.event.head_commit.message }}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo true || echo false)"
+      - name: Matches version pattern
+        run: echo "${{ steps.validation.outputs.is_version }}"
+
   increment:
-    if: github.event.pull_request.merged == true
+    needs: test-commit-message
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.test-commit-message.outputs.is_version == 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

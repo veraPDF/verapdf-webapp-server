@@ -10,19 +10,42 @@ env:
   WORKER_IMAGE_NAME: verapdf_worker
   FILE_STORAGE_IMAGE_NAME: verapdf_file-storage
   JOB_SERVICE_IMAGE_NAME: verapdf_job-service
-  
+
+concurrency: build_environment
 
 jobs:
-  build:
-    if: ${{ !startsWith(github.event.head_commit.message, 'Merge pull request') }}
+  test-commit-message:
     runs-on: ubuntu-latest
+    outputs:
+      is_version: ${{ steps.validation.outputs.is_version }}
+    steps:
+      - id: validation
+        run: echo "::set-output name=is_version::$([[ '${{ github.event.head_commit.message }}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo true || echo false)"
+      - name: Matches version pattern
+        run: echo "${{ steps.validation.outputs.is_version }}"
 
+  version-update:
+    needs: test-commit-message
+    if: ${{ needs.test-commit-message.outputs.is_version == 'true' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.11
         uses: actions/setup-java@v1
         with:
           java-version: 1.11
+
+      - name: Create workflow dispatch for test run
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.WORKFLOW_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+             owner: 'veraPDF',
+             repo: 'veraPDF-integration-tests',
+             workflow_id: 'run-tests-workflow.yml',
+             ref: 'integration'
+            })
 
       - name: Update gut submodule for veraPDF-validation-profiles
         run: git submodule update --init --remote --recursive
@@ -54,4 +77,3 @@ jobs:
 
       - name: Push worker Docker images to the ${{ env.REGISTRY }}
         run: docker push $REGISTRY/verapdf/$WORKER_IMAGE_NAME:latest
-      
