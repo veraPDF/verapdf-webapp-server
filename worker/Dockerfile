@@ -10,4 +10,4 @@ FROM openjdk:11-jre
 
 COPY --from=MAVEN_BUILD worker/target/worker.jar worker.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "worker.jar"] "worker.jar"]
+ENTRYPOINT ["java", "-jar", "worker.jar"]
