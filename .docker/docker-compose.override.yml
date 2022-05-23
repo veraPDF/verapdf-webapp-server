@@ -11,3 +11,4 @@ services:
     depends_on:
       - file-storage
       - job-service
+      - worker

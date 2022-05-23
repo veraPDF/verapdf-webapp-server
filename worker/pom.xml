@@ -91,10 +91,27 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>io.reformanda.semper</groupId>
+                <artifactId>dependencyversion-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <id>set-all</id>
+                        <goals>
+                            <goal>set-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -106,6 +123,11 @@
                         <goals>
                             <goal>build-info</goal>
                         </goals>
+                        <configuration>
+                            <additionalProperties>
+                                <apps.version>${org.verapdf.apps:greenfield-apps:jar.version}</apps.version>
+                            </additionalProperties>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -87,6 +87,8 @@ services:
 
   worker:
     image: ghcr.io/verapdf/verapdf_worker:latest
+    expose:
+      - 8080
     restart: always
     depends_on:
       - job-service

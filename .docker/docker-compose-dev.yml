@@ -93,6 +93,8 @@ services:
     build:
       context: ../worker
       dockerfile: Dockerfile-dev
+    expose:
+      - 8080
     restart: always
     depends_on:
     - job-service

@@ -11,6 +11,15 @@ spring:
         acknowledge-mode: manual
     publisher-confirm-type: correlated
 
+server:
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      base-path: /status/worker
+
 verapdf:
   rabbitmq:
     queues:
