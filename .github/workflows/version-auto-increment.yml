@@ -1,0 +1,43 @@
+name: Increment server version
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      [ master ]
+
+concurrency: increment_environment
+
+jobs:
+  test-commit-message:
+    runs-on: ubuntu-latest
+    outputs:
+      is_version: ${{ steps.validation.outputs.is_version }}
+    steps:
+      - id: validation
+        run: echo "::set-output name=is_version::$([[ '${{ github.event.head_commit.message }}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]] && echo true || echo false)"
+      - name: Matches version pattern
+        run: echo "${{ steps.validation.outputs.is_version }}"
+
+  increment:
+    needs: test-commit-message
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.test-commit-message.outputs.is_version == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+      - name: Increment versions in poms
+        run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT versions:commit
+      - name: Get latest version
+        id: latest-version
+        run: echo "::set-output name=version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+      - name: Commit updated version
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: v${{ steps.latest-version.outputs.version }}

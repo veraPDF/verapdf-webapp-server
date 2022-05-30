@@ -18,6 +18,7 @@ spring:
         concurrency: ${amqp.server.concurrency}
         max-concurrency: ${amqp.server.max.concurrency}
         prefetch: 1
+        acknowledge-mode: manual
     publisher-confirm-type: correlated
 
 server:
@@ -27,7 +28,7 @@ server:
 management:
   endpoints:
     web:
-      base-path: /status
+      base-path: /status/job-service
 
 verapdf:
   cleaning:
@@ -41,3 +42,5 @@ verapdf:
       listening-queue:
         name: ${amqp.server.listening.queue.name}
         max-size: ${amqp.server.listening.queue.max.size}
+  task:
+    processing-limit: ${task.processing.limit}

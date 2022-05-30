@@ -13,7 +13,9 @@ services:
           target: /var/lib/postgresql/data
     restart: always
   file-storage:
-    build: ../local-storage-service/server
+    build:
+      context: ../local-storage-service/server
+      dockerfile: Dockerfile-dev
     expose:
       - 8080
     depends_on:
@@ -47,7 +49,9 @@ services:
     restart: always
 
   job-service:
-    build: ../job-service/server
+    build:
+      context: ../job-service/server
+      dockerfile: Dockerfile-dev
     expose:
       - 8080
     depends_on:
@@ -68,6 +72,7 @@ services:
       AMQP_SERVER_SENDING_QUEUE_MAX_SIZE: 2047MB
       AMQP_SERVER_LISTENING_QUEUE_NAME: replyQueue
       AMQP_SERVER_LISTENING_QUEUE_MAX_SIZE: 2047MB
+      TASK_PROCESSING_LIMIT: 2
     restart: always
 
   # Validation tasks queue
@@ -85,7 +90,11 @@ services:
         target: /var/lib/rabbitmq/
 
   worker:
-    build: ../worker
+    build:
+      context: ../worker
+      dockerfile: Dockerfile-dev
+    expose:
+      - 8080
     restart: always
     depends_on:
     - job-service
@@ -105,6 +114,7 @@ services:
       JOB_SERVICE_PORT: 8080
       FILE_STORAGE_HOST: file-storage
       FILE_STORAGE_PORT: 8080
+      TASK_PROCESSING_LIMIT: 2
 
 volumes:
   localstorage_database_data:

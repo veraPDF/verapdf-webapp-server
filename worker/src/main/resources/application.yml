@@ -8,7 +8,17 @@ spring:
         concurrency: ${amqp.server.concurrency}
         max-concurrency: ${amqp.server.max.concurrency}
         prefetch: 1
+        acknowledge-mode: manual
     publisher-confirm-type: correlated
+
+server:
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      base-path: /status/worker
 
 verapdf:
   rabbitmq:
@@ -19,6 +29,8 @@ verapdf:
       listening-queue:
         name: ${amqp.server.listening.queue.name}
         max-size: ${amqp.server.listening.queue.max.size}
+  task:
+    processing-limit: ${task.processing.limit}
   files:
     worker-dir: /opt/verapdf/worker/files/
   local-storage-service:

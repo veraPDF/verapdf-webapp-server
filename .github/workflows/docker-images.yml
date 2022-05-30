@@ -1,0 +1,79 @@
+name: Build with maven, create docker images and push to github registries.
+
+on:
+  push:
+    branches: [ master ]
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  WORKER_IMAGE_NAME: verapdf_worker
+  FILE_STORAGE_IMAGE_NAME: verapdf_file-storage
+  JOB_SERVICE_IMAGE_NAME: verapdf_job-service
+
+concurrency: build_environment
+
+jobs:
+  test-commit-message:
+    runs-on: ubuntu-latest
+    outputs:
+      is_version: ${{ steps.validation.outputs.is_version }}
+    steps:
+      - id: validation
+        run: echo "::set-output name=is_version::$([[ '${{ github.event.head_commit.message }}' =~ ^v[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]] && echo true || echo false)"
+      - name: Matches version pattern
+        run: echo "${{ steps.validation.outputs.is_version }}"
+
+  version-update:
+    needs: test-commit-message
+    if: ${{ needs.test-commit-message.outputs.is_version == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+
+      - name: Create workflow dispatch for test run
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.WORKFLOW_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+             owner: 'veraPDF',
+             repo: 'veraPDF-integration-tests',
+             workflow_id: 'run-tests-workflow.yml',
+             ref: 'integration'
+            })
+
+      - name: Update git submodule for veraPDF-validation-profiles
+        run: git submodule update --init --remote --recursive
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Build file-storage-service Docker image
+        run: docker build ./local-storage-service/server -f "./local-storage-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:latest
+
+      - name: Build job-service Docker image
+        run: docker build ./job-service/server -f "./job-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:latest
+
+      - name: Build worker-service Docker image
+        run: docker build ./worker -f "./worker/Dockerfile-dev" -t  $REGISTRY/verapdf/$WORKER_IMAGE_NAME:latest
+
+      - name: Login into ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Push file-storage-service Docker images to the ${{ env.REGISTRY }}
+        run : docker push $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:latest
+
+      - name: Push job-service Docker images to the ${{ env.REGISTRY }}
+        run: docker push $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:latest
+
+      - name: Push worker Docker images to the ${{ env.REGISTRY }}
+        run: docker push $REGISTRY/verapdf/$WORKER_IMAGE_NAME:latest

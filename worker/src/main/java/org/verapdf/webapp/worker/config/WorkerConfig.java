@@ -15,6 +15,7 @@ import org.verapdf.webapp.queueclient.handler.QueueListenerHandler;
 import org.verapdf.webapp.queueclient.handler.QueueSenderErrorEventHandler;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
+import org.verapdf.webapp.queueclient.util.QueueUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,11 @@ public class WorkerConfig {
 	                               AmqpAdmin amqpAdmin,
 	                               List<QueueSenderErrorEventHandler> queueSenderErrorEventHandler) {
 		return new QueueSender(sendingQueueName, sendingQueueSize, rabbitTemplate,
-				amqpAdmin, queueSenderErrorEventHandler);
+		                       amqpAdmin, queueSenderErrorEventHandler);
+	}
+
+	@Bean
+	public QueueUtil queueUtil() {
+		return QueueUtil.getInstance();
 	}
 }

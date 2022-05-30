@@ -2,6 +2,7 @@ package org.verapdf.webapp.jobservice.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.verapdf.webapp.queueclient.entity.QueueErrorEventType;
 import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorData;
 import org.verapdf.webapp.queueclient.handler.QueueListenerHandler;
 import org.verapdf.webapp.queueclient.handler.QueueSenderErrorEventHandler;
+import org.verapdf.webapp.queueclient.util.QueueUtil;
 
 import java.util.UUID;
 
@@ -30,22 +32,35 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 	private final JobRepository jobRepository;
 	private final JobTaskRepository taskRepository;
 	private final ObjectMapper objectMapper;
+	private final QueueUtil queueUtil;
 
-	public JobTaskResultHandler(JobRepository jobRepository, JobTaskRepository taskRepository, ObjectMapper objectMapper) {
+	public JobTaskResultHandler(JobRepository jobRepository, JobTaskRepository taskRepository,
+	                            ObjectMapper objectMapper, QueueUtil queueUtil) {
 		this.jobRepository = jobRepository;
 		this.taskRepository = taskRepository;
 		this.objectMapper = objectMapper;
+		this.queueUtil = queueUtil;
 	}
 
 	@Override
 	@Transactional
-	public void handleMessage(String message) {
+	public void handleMessage(String message, Channel channel, long deliveryTag) {
+		ExecutableTaskResultDTO taskResult = null;
 		try {
-			ExecutableTaskResultDTO taskResult
-					= objectMapper.readValue(message, ExecutableTaskResultDTO.class);
+			taskResult = objectMapper.readValue(message, ExecutableTaskResultDTO.class);
 			saveJobTaskResult(taskResult);
+			queueUtil.applyAndDiscardJob(channel, deliveryTag, taskResult.getJobId(), taskResult.getFileId());
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Cannot parse message to task result. Message: '" + message + '\'', e);
+			queueUtil.rejectAndDiscardJob(channel, deliveryTag, null, null);
+		} catch (Exception e) {
+			LOGGER.error("Unexpected internal exception during result message processing. Message: "
+			             + message, e);
+			if (taskResult != null) {
+				queueUtil.rejectAndDiscardJob(channel, deliveryTag, taskResult.getJobId(), taskResult.getFileId());
+			} else {
+				queueUtil.rejectAndDiscardJob(channel, deliveryTag, null, null);
+			}
 		}
 	}
 
@@ -62,6 +77,9 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 			saveJobTaskResult(taskResult);
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Cannot parse to ExecutableTaskDTO: " + eventMessage, e);
+		} catch (Exception e) {
+			LOGGER.error("Unexpected internal exception during processing event. Event message: "
+			             + eventMessage, e);
 		}
 	}
 
@@ -82,12 +100,12 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 		updateJobStatus(job);
 	}
 
-	private void updateTaskStatus(ExecutableTaskResultDTO taskResult, UUID fileId, Job job) {
+	public void updateTaskStatus(ExecutableTaskResultDTO taskResult, UUID fileId, Job job) {
 		JobTask task = job.getJobTasks()
-				.stream()
-				.filter(jobTask -> jobTask.getFileId().equals(fileId))
-				.findFirst()
-				.orElse(null);
+		                  .stream()
+		                  .filter(jobTask -> jobTask.getFileId().equals(fileId))
+		                  .findFirst()
+		                  .orElse(null);
 
 		if (task == null) {
 			return;
@@ -102,20 +120,31 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 		taskRepository.saveAndFlush(task);
 	}
 
-	private ExecutableTaskResultDTO createExecutableTaskResultDTO(
-			ExecutableTaskDTO executableTask, SendingToQueueErrorData event) {
+	public void updateJobStatus(Job job) {
+		for (JobTask task : job.getJobTasks()) {
+			if (task.getStatus() == TaskStatus.CREATED || task.getStatus() == TaskStatus.PROCESSING) {
+				return;
+			}
+		}
+
+		job.setStatus(JobStatus.FINISHED);
+		jobRepository.saveAndFlush(job);
+	}
+
+	private ExecutableTaskResultDTO createExecutableTaskResultDTO(ExecutableTaskDTO executableTask,
+	                                                              SendingToQueueErrorData event) {
 		ExecutableTaskResultDTO taskResult = new ExecutableTaskResultDTO();
 		taskResult.setJobId(executableTask.getJobId());
 		taskResult.setFileId(executableTask.getFileId());
 		String errorMessage;
 		if (QueueErrorEventType.SENDING_ERROR_CALLBACK == event.getQueueErrorEventType()) {
 			errorMessage = "Message: " + event.getMessage()
-					+ " cannot be send into the queue '" + event.getQueueName()
-					+ "', cause: " + event.getCauseMessage();
+			               + " cannot be send into the queue '" + event.getQueueName()
+			               + "', cause: " + event.getCauseMessage();
 		} else {
 			errorMessage = "Message: " + event.getMessage()
-					+ " cannot be send into the queue '" + event.getQueueName()
-					+ "', internal error, cause: " + event.getCauseMessage();
+			               + " cannot be send into the queue '" + event.getQueueName()
+			               + "', internal error, cause: " + event.getCauseMessage();
 		}
 		taskResult.setErrorMessage(errorMessage);
 		taskResult.setErrorType(TaskError.SENDING_TO_QUEUE_ERROR);
@@ -124,17 +153,5 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 
 	private Job findJobById(UUID jobId) {
 		return jobRepository.findById(jobId).orElse(null);
-	}
-
-	private void updateJobStatus(Job job) {
-		for (JobTask task : job.getJobTasks()) {
-			if (task.getStatus() == TaskStatus.CREATED
-					|| task.getStatus() == TaskStatus.PROCESSING) {
-				return;
-			}
-		}
-
-		job.setStatus(JobStatus.FINISHED);
-		jobRepository.saveAndFlush(job);
 	}
 }

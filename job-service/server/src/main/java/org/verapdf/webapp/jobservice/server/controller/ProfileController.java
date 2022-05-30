@@ -19,8 +19,9 @@ public class ProfileController {
 		this.profiles = new ArrayList<>();
 		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1_COMPLETE, true));
 		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1, true));
+		this.profiles.add(new ProfileDTO(Profile.WCAG_2_1_DEV, true));
 		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_MACHINE, true));
-		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_HUMAN, true));
+		this.profiles.add(new ProfileDTO(Profile.PDFUA_1_HUMAN, false));
 		this.profiles.add(new ProfileDTO(Profile.TAGGED_PDF, true));
 		this.profiles.add(new ProfileDTO(Profile.PDFA_1_A, false));
 		this.profiles.add(new ProfileDTO(Profile.PDFA_1_B, false));

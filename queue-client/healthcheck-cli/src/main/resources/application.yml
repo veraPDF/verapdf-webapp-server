@@ -9,6 +9,7 @@ spring:
         concurrency: 4
         max-concurrency: 8
         prefetch: 1
+        acknowledge-mode: manual
     publisher-confirm-type: correlated
 
 verapdf:

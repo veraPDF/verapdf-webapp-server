@@ -1,0 +1,74 @@
+
+name: Release tagged image
+
+on:
+  push:
+    tags: 
+      - '*'
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  WORKER_IMAGE_NAME: verapdf_worker
+  FILE_STORAGE_IMAGE_NAME: verapdf_file-storage
+  JOB_SERVICE_IMAGE_NAME: verapdf_job-service
+  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
+
+      - name: Update git submodule for veraPDF-validation-profiles
+        run: git submodule update --init --remote --recursive
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+        
+      - name: Get tag name
+        id: tag
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Build file-storage-service Docker image
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run: docker build ./local-storage-service/server -f "./local-storage-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Build job-service Docker image
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run: docker build ./job-service/server -f "./job-service/server/Dockerfile-dev" -t  $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Build worker-service Docker image
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run: docker build ./worker -f "./worker/Dockerfile-dev" -t  $REGISTRY/verapdf/$WORKER_IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Login into ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Push file-storage-service Docker images to the ${{ env.REGISTRY }}
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run : docker push $REGISTRY/verapdf/$FILE_STORAGE_IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Push job-service Docker images to the ${{ env.REGISTRY }}
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run: docker push $REGISTRY/verapdf/$JOB_SERVICE_IMAGE_NAME:$RELEASE_VERSION
+
+      - name: Push worker Docker images to the ${{ env.REGISTRY }}
+        env:
+          RELEASE_VERSION: ${{ steps.tag.outputs.tag }}
+        run: docker push $REGISTRY/verapdf/$WORKER_IMAGE_NAME:$RELEASE_VERSION
+      

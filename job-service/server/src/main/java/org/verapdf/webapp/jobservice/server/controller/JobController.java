@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
+import org.verapdf.webapp.error.exception.BadRequestException;
 import org.verapdf.webapp.error.exception.ConflictException;
 import org.verapdf.webapp.error.exception.NotFoundException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
@@ -30,7 +31,7 @@ public class JobController {
 		JobDTO createdJobDTO = jobService.createJob(jobDTO);
 		URI uri = MvcUriComponentsBuilder
 				.fromMethodName(JobController.class,
-				"getJob", createdJobDTO.getId())
+				                "getJob", createdJobDTO.getId())
 				.build()
 				.encode()
 				.toUri();
@@ -40,6 +41,12 @@ public class JobController {
 	@GetMapping("/{jobId}")
 	public JobDTO getJob(@PathVariable UUID jobId) throws NotFoundException {
 		return jobService.getJobById(jobId);
+	}
+
+	@PatchMapping("/{jobId}/increaseTaskProcessingCount/file/{fileId}")
+	public int increaseTaskProcessingCount(@PathVariable UUID jobId,
+	                                       @PathVariable UUID fileId) throws NotFoundException, BadRequestException, ConflictException {
+		return jobService.increaseTaskProcessingCount(jobId, fileId);
 	}
 
 	@PutMapping("/{jobId}")

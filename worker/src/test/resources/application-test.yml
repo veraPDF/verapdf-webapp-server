@@ -3,6 +3,8 @@ spring:
     exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
 verapdf:
+  task:
+    processing-limit: 2
   local-storage-service:
     uri: http://localhost:8080/api
   job-service:
