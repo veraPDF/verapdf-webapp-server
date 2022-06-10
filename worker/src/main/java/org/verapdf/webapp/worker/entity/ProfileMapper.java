@@ -45,12 +45,9 @@ public class ProfileMapper {
 		this.profilesMap.put(Profile.PDFUA_1_MACHINE,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
 				                     "/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1.xml"))));
-//		this.profilesMap.put(Profile.PDFUA_1_HUMAN,
-//		                     Profiles.profileFromXml(getClass().getResourceAsStream(
-//				                     "/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1-Human.xml")));
 		this.profilesMap.put(Profile.TAGGED_PDF,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
-				                     "/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32000-1-Tagged.xml"))));
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32005-Tagged.xml"))));
 		this.profilesMap.put(Profile.WCAG_2_1,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
 				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-21.xml"))));
