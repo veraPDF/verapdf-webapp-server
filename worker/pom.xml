@@ -15,8 +15,8 @@
 
     <properties>
         <java.version>11</java.version>
-        <verapdf.version>[1.21.0,1.22.0-RC)</verapdf.version>
-        <verapdf-wcag.version>[1.21.0,1.22.0-RC)</verapdf-wcag.version>
+        <verapdf.version>[1.23.0,1.24.0-RC)</verapdf.version>
+        <verapdf-wcag.version>[1.23.0,1.24.0-RC)</verapdf-wcag.version>
     </properties>
 
     <repositories>
