@@ -118,6 +118,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			taskResult = new ExecutableTaskResultDTO(taskDTO, e.getTaskError(), e.getMessage());
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
+			e.printStackTrace();
 			recoverable = true;
 			taskResult = new ExecutableTaskResultDTO(taskDTO, TaskError.PROCESSING_INTERNAL_ERROR,
 			                                         e.getMessage());
