@@ -103,6 +103,8 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 				return;
 			}
 
+			LOGGER.info("Validation start: {}", jobId);
+
 			checkProcessingConfiguration(jobDTO);
 
 			fileToProcess = getFileToProcess(fileId);
@@ -137,6 +139,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 		}
 
 		try {
+			LOGGER.info("Validation end: {}", jobId);
 			queueSender.sendMessage(objectMapper.writeValueAsString(taskResult));
 			queueUtil.applyAndDiscardJob(channel, deliveryTag, jobId, fileId);
 			return;
