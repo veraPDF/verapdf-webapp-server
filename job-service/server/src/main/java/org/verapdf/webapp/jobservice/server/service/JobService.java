@@ -145,8 +145,9 @@ public class JobService {
 
 			ExecutableTaskDTO executableTaskDTO = new ExecutableTaskDTO(jobId, task.getFileId());
 			try {
-				LOGGER.info("Enter queue: {} ", executableTaskDTO.getJobId());
-				queueSender.sendMessage(objectMapper.writeValueAsString(executableTaskDTO));
+				String taskMessage = objectMapper.writeValueAsString(executableTaskDTO);
+				LOGGER.info("Message {} entered the queue", taskMessage);
+				queueSender.sendMessage(taskMessage);
 				task.setStatus(TaskStatus.PROCESSING);
 			} catch (JsonProcessingException e) {
 				String errorMessage = "Cannot convert task to json. Exception message: " + e.getMessage();

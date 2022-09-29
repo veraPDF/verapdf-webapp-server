@@ -70,6 +70,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 	@Override
 	public void handleMessage(String message, Channel channel, long deliveryTag) {
 		ExecutableTaskDTO taskDTO;
+		LOGGER.info("Message {} left the queue", message);
 
 		try {
 			taskDTO = objectMapper.readValue(message, ExecutableTaskDTO.class);
@@ -112,6 +113,8 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			ValidationReport validationReport
 					= veraPdfProcessor.validate(fileToProcess, jobDTO.getProfile());
 
+			LOGGER.info("Validation end: {}", jobId);
+
 			StoredFileDTO reportFile = saveReportFile(validationReport, fileId);
 
 			taskResult = new ExecutableTaskResultDTO(taskDTO, reportFile.getId());
@@ -139,8 +142,9 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 		}
 
 		try {
-			LOGGER.info("Validation end: {}", jobId);
-			queueSender.sendMessage(objectMapper.writeValueAsString(taskResult));
+			String resultMessage = objectMapper.writeValueAsString(taskResult);
+			LOGGER.info("Message {} entered the queue", resultMessage);
+			queueSender.sendMessage(resultMessage);
 			queueUtil.applyAndDiscardJob(channel, deliveryTag, jobId, fileId);
 			return;
 		} catch (JsonProcessingException e) {
