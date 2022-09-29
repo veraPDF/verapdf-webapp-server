@@ -47,6 +47,7 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 	public void handleMessage(String message, Channel channel, long deliveryTag) {
 		ExecutableTaskResultDTO taskResult = null;
 		try {
+			LOGGER.info("Message {} left the queue", message);
 			taskResult = objectMapper.readValue(message, ExecutableTaskResultDTO.class);
 			saveJobTaskResult(taskResult);
 			queueUtil.applyAndDiscardJob(channel, deliveryTag, taskResult.getJobId(), taskResult.getFileId());
