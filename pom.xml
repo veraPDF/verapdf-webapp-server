@@ -20,7 +20,7 @@
 
     <groupId>org.verapdf</groupId>
     <artifactId>verapdf-webapp-server</artifactId>
-    <version>0.8.22-SNAPSHOT</version>
+    <version>0.8.23-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>webapp-server</name>
 
