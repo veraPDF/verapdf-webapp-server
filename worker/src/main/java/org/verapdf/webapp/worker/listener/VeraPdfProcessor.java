@@ -60,7 +60,7 @@ public class VeraPdfProcessor {
 							"Missing validation profile for " + profile.name());
 				}
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(source, validationProfile.getPDFAFlavour());
-				     PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, 100, false, true)) {
+				     PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, 100, false, true, false)) {
 					validationResult = validator.validate(parser);
 				}
 			}
