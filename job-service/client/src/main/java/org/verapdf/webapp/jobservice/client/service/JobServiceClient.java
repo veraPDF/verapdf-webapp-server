@@ -50,4 +50,34 @@ public class JobServiceClient {
 		                                                       .buildAndExpand(jobId.toString(), fileId.toString())
 		                                                       .toUri(), null, Integer.class);
 	}
+
+	public Boolean updateJobStatusToProcessing(UUID jobId) {
+		if (jobId != null) {
+			return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
+			                                                       .path("/jobs/{jobId}/processing")
+			                                                       .buildAndExpand(jobId.toString())
+			                                                       .toUri(), null, Boolean.class);
+		}
+		return false;
+	}
+
+	public Boolean updateJobProgress(UUID jobId, String progress) {
+		if (jobId != null) {
+			return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
+			                                                       .path("/jobs/{jobId}/progress/{progress}")
+			                                                       .buildAndExpand(jobId.toString(), progress)
+			                                                       .toUri(), null, Boolean.class);
+		}
+		return false;
+	}
+
+	public Boolean clearJobProgress(UUID jobId) {
+		if (jobId != null) {
+			return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
+			                                                       .path("/jobs/{jobId}/progress")
+			                                                       .buildAndExpand(jobId.toString())
+			                                                       .toUri(), null, Boolean.class);
+		}
+		return false;
+	}
 }

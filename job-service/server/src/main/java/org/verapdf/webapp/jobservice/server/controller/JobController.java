@@ -43,6 +43,16 @@ public class JobController {
 		return jobService.getJobById(jobId);
 	}
 
+	@PatchMapping ("/{jobId}/processing")
+	public boolean startJobProcessing(@PathVariable UUID jobId) throws VeraPDFBackendException {
+		return jobService.updateJobStatusToProcessing(jobId);
+	}
+
+	@PatchMapping(value = {"/{jobId}/progress/{progress}", "/{jobId}/progress"})
+	public void jobProgressUpdate(@PathVariable UUID jobId, @PathVariable(required = false) String progress) {
+		jobService.checkAndUpdateJobProgress(jobId, progress);
+	}
+
 	@PatchMapping("/{jobId}/increaseTaskProcessingCount/file/{fileId}")
 	public int increaseTaskProcessingCount(@PathVariable UUID jobId,
 	                                       @PathVariable UUID fileId) throws NotFoundException, BadRequestException, ConflictException {

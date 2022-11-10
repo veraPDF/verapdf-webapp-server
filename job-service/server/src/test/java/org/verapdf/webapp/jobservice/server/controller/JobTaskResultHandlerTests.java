@@ -21,6 +21,7 @@ import org.verapdf.webapp.jobservice.server.entity.Job;
 import org.verapdf.webapp.jobservice.server.repository.JobRepository;
 import org.verapdf.webapp.jobservice.server.repository.JobTaskRepository;
 import org.verapdf.webapp.jobservice.server.service.JobTaskResultHandler;
+import org.verapdf.webapp.jobservice.server.util.JobQueueProperties;
 import org.verapdf.webapp.queueclient.entity.QueueErrorEventType;
 import org.verapdf.webapp.queueclient.entity.SendingToQueueErrorData;
 import org.verapdf.webapp.queueclient.listener.QueueListener;
@@ -48,6 +49,9 @@ class JobTaskResultHandlerTests {
 	@Autowired
 	private JobTaskResultHandler jobTaskResultHandler;
 
+	@Autowired
+	private JobQueueProperties jobQueueProperties;
+
 	@MockBean
 	private QueueSender queueSender;
 
@@ -61,6 +65,7 @@ class JobTaskResultHandlerTests {
 	public void cleanJobsAndTasks() {
 		jobRepository.deleteAll();
 		jobTaskRepository.deleteAll();
+		jobQueueProperties.clear();
 	}
 
 	@AfterEach
@@ -181,7 +186,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'FINISHED'," +
@@ -189,7 +196,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -206,7 +213,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -215,7 +224,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -252,7 +261,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -261,7 +272,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -277,7 +288,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'FINISHED'," +
@@ -285,7 +298,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -402,6 +415,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'FINISHED'," +
@@ -440,7 +455,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'FINISHED'," +
@@ -448,7 +465,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -488,6 +505,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -538,6 +557,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'FINISHED'," +
@@ -577,7 +598,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -586,7 +609,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -628,6 +651,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -676,6 +701,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -714,7 +741,9 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -723,7 +752,7 @@ class JobTaskResultHandlerTests {
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 	}
@@ -762,6 +791,8 @@ class JobTaskResultHandlerTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'FINISHED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId':'534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'ERROR'," +
@@ -823,14 +854,16 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 
@@ -841,14 +874,16 @@ class JobTaskResultHandlerTests {
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
-		                                 "'status':'PROCESSING'," +
+		                                 "'status':'WAITING'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':0," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}," +
 		                                 "{" +
 		                                 "'fileId' : '774bd16b-7ad5-354e-808e-5dc731c73963'," +
-		                                 "'status':'PROCESSING'" +
+		                                 "'status':'WAITING'" +
 		                                 "}" +
 		                                 "]}", true));
 

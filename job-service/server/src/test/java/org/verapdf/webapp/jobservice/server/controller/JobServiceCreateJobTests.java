@@ -65,6 +65,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -113,6 +115,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'CREATED'" +
@@ -195,6 +199,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -284,6 +290,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -319,6 +327,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -351,6 +361,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -383,6 +395,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
@@ -430,6 +444,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':[{" +
 		                                 "'fileId' : '534bd16b-6bd5-404e-808e-5dc731c73963'," +
 		                                 "'status':'CREATED'" +
@@ -465,6 +481,8 @@ public class JobServiceCreateJobTests {
 		       .andExpect(content().json("{'id':'" + uploadedJobId + "'," +
 		                                 "'profile':'TAGGED_PDF'," +
 		                                 "'status':'CREATED'," +
+		                                 "'progress':null," +
+		                                 "'queuePosition':null," +
 		                                 "'tasks':null}", true));
 	}
 
