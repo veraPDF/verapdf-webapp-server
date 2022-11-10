@@ -19,6 +19,8 @@ public class JobDTO {
 	private Profile profile;
 	@JsonDeserialize(converter = StringToJobStatusFailSaveConverter.class)
 	private JobStatus status;
+	private String progress;
+	private Integer queuePosition;
 	private List<@NotNull @Valid JobTaskDTO> tasks;
 
 	public JobDTO(){
@@ -47,6 +49,22 @@ public class JobDTO {
 
 	public void setStatus(JobStatus status) {
 		this.status = status;
+	}
+
+	public String getProgress() {
+		return progress;
+	}
+
+	public void setProgress(String progress) {
+		this.progress = progress;
+	}
+
+	public Integer getQueuePosition() {
+		return queuePosition;
+	}
+
+	public void setQueuePosition(Integer queuePosition) {
+		this.queuePosition = queuePosition;
 	}
 
 	public List<JobTaskDTO> getTasks() {

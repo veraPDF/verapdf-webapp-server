@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.UUID;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -58,7 +59,7 @@ public class VeraPdfProcessorTests {
 		String expectedReportAsString = new String(getClass().getResourceAsStream(
 				"/files/report-" + profile.toString() + ".json").readAllBytes(), StandardCharsets.UTF_8);
 		ValidationReport validationReport
-				= veraPDFProcessor.validate(fileToValidatePath.toFile(), profile);
+				= veraPDFProcessor.validate(fileToValidatePath.toFile(), profile, UUID.randomUUID());
 		String validationReportAsJson = writeValidationReportAsJson(validationReport);
 		Assertions.assertTrue(JSONCompare.compareJSON(expectedReportAsString, validationReportAsJson,
 		                                              JSONCompareMode.NON_EXTENSIBLE).passed());

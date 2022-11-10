@@ -1,27 +1,41 @@
 package org.verapdf.webapp.worker.listener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
+import org.verapdf.core.ValidationException;
+import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
 import org.verapdf.pdfa.Foundries;
 import org.verapdf.pdfa.PDFAParser;
 import org.verapdf.pdfa.PDFAValidator;
-import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
 import org.verapdf.pdfa.results.ValidationResult;
 import org.verapdf.pdfa.validation.profiles.ValidationProfile;
 import org.verapdf.pdfa.validation.validators.ValidatorFactory;
 import org.verapdf.processor.reports.Reports;
 import org.verapdf.processor.reports.ValidationDetails;
 import org.verapdf.processor.reports.ValidationReport;
+import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
+import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
 import org.verapdf.webapp.worker.entity.ProfileMapper;
 import org.verapdf.webapp.worker.error.exception.VeraPDFProcessingException;
+import org.verapdf.webapp.worker.error.exception.VeraPDFWorkerException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class VeraPdfProcessor {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(VeraPdfProcessor.class);
 
 	private static final String STATEMENT_PREFIX = "PDF file is ";
 	private static final String NOT_INSERT = "not ";
@@ -32,10 +46,12 @@ public class VeraPdfProcessor {
 			+ NOT_INSERT + STATEMENT_SUFFIX;
 
 	private final ProfileMapper profileMapper;
+	private final JobServiceClient jobServiceClient;
 
 	@Autowired
-	public VeraPdfProcessor(ProfileMapper profileMapper) {
+	public VeraPdfProcessor(ProfileMapper profileMapper, JobServiceClient jobServiceClient) {
 		this.profileMapper = profileMapper;
+		this.jobServiceClient = jobServiceClient;
 		VeraGreenfieldFoundryProvider.initialise();
 	}
 
@@ -43,14 +59,14 @@ public class VeraPdfProcessor {
 		return status ? COMPLIANT_STATEMENT : NONCOMPLIANT_STATEMENT;
 	}
 
-	public ValidationReport validate(File source, Profile profile) throws VeraPDFProcessingException {
+	public ValidationReport validate(File source, Profile profile, UUID jobId) throws VeraPDFProcessingException {
 		try (InputStream is = new FileInputStream(source)) {
 			ValidationResult validationResult;
 			if (profile == Profile.PDFA_AUTO) {
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(is);
 				     PDFAValidator validator
 						     = Foundries.defaultInstance().createValidator(parser.getFlavour(), false)) {
-					validationResult = validator.validate(parser);
+					validationResult = startValidation(validator, parser, jobId);
 				}
 			} else {
 				ValidationProfile validationProfile
@@ -61,7 +77,7 @@ public class VeraPdfProcessor {
 				}
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(source, validationProfile.getPDFAFlavour());
 				     PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, 100, false, true, false)) {
-					validationResult = validator.validate(parser);
+					validationResult = startValidation(validator, parser, jobId);
 				}
 			}
 			ValidationDetails details
@@ -72,6 +88,40 @@ public class VeraPdfProcessor {
 					validationResult.isCompliant());
 		} catch (Exception e) {
 			throw new VeraPDFProcessingException(e.getMessage(), e);
+		}
+	}
+
+	private ValidationResult startValidation(PDFAValidator validator, PDFAParser parser,
+	                                         UUID jobId) throws ValidationException {
+		Runnable runnable = () -> {
+			try {
+				updateJobProgress(jobId, validator.getValidationProgressString());
+			} catch (VeraPDFWorkerException e) {
+				e.printStackTrace();
+			}
+		};
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+		executor.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
+
+		ValidationResult validationResult =  validator.validate(parser);
+
+		executor.shutdown();
+		return validationResult;
+	}
+
+	private Boolean updateJobProgress(UUID jobId, String progress) throws VeraPDFWorkerException {
+		try {
+			return jobServiceClient.updateJobProgress(jobId, progress);
+		} catch (RestClientResponseException e) {
+			int statusCode = e.getRawStatusCode();
+			String responseBody = e.getResponseBodyAsString();
+			if (HttpStatus.NOT_FOUND.value() == statusCode || HttpStatus.BAD_REQUEST.value() == statusCode
+			    || HttpStatus.CONFLICT.value() == statusCode) {
+				LOGGER.error(responseBody);
+				return false;
+			} else {
+				throw new VeraPDFWorkerException(TaskError.UPDATE_JOB_PROGRESS_ERROR, responseBody);
+			}
 		}
 	}
 }

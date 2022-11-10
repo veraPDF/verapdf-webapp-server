@@ -91,6 +91,13 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			fileId = taskDTO.getFileId();
 			checkParsedExecutableTaskDTO(jobId, fileId, message);
 
+			Boolean updateJobStatusSuccess = updateJobStatusToProcessing(jobId);
+			if (updateJobStatusSuccess == null || !updateJobStatusSuccess) {
+				// if setting PROCESSING status to the job was unsuccessful (job is already processing or finished)
+				queueUtil.rejectAndDiscardJob(channel, deliveryTag, jobId, fileId);
+				return;
+			}
+
 			jobProcessingCount = increaseTaskProcessingCount(jobId, fileId);
 			if (jobProcessingCount == null) {
 				queueUtil.rejectAndDiscardJob(channel, deliveryTag, jobId, fileId);
@@ -111,7 +118,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			fileToProcess = getFileToProcess(fileId);
 
 			ValidationReport validationReport
-					= veraPdfProcessor.validate(fileToProcess, jobDTO.getProfile());
+					= veraPdfProcessor.validate(fileToProcess, jobDTO.getProfile(), jobId);
 
 			LOGGER.info("Validation end: {}", jobId);
 
@@ -146,6 +153,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 			LOGGER.info("Message {} entered the queue", resultMessage);
 			queueSender.sendMessage(resultMessage);
 			queueUtil.applyAndDiscardJob(channel, deliveryTag, jobId, fileId);
+			clearJobProgress(jobId);
 			return;
 		} catch (JsonProcessingException e) {
 			LOGGER.error("Could not serialize task result to string");
@@ -196,6 +204,38 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 				return null;
 			} else {
 				throw new VeraPDFWorkerException(TaskError.INCREASE_TASK_PROCESSING_COUNT_ERROR, responseBody);
+			}
+		}
+	}
+
+	private Boolean updateJobStatusToProcessing(UUID jobId) throws VeraPDFWorkerException {
+		try {
+			 return jobServiceClient.updateJobStatusToProcessing(jobId);
+		} catch (RestClientResponseException e) {
+			int statusCode = e.getRawStatusCode();
+			String responseBody = e.getResponseBodyAsString();
+			if (HttpStatus.NOT_FOUND.value() == statusCode || HttpStatus.BAD_REQUEST.value() == statusCode
+			    || HttpStatus.CONFLICT.value() == statusCode) {
+				LOGGER.error(responseBody);
+				return false;
+			} else {
+				throw new VeraPDFWorkerException(TaskError.UPDATE_JOB_STATUS_TO_PROCESSING_ERROR, responseBody);
+			}
+		}
+	}
+
+	private Boolean clearJobProgress(UUID jobId) throws VeraPDFWorkerException {
+		try {
+			return jobServiceClient.clearJobProgress(jobId);
+		} catch (RestClientResponseException e) {
+			int statusCode = e.getRawStatusCode();
+			String responseBody = e.getResponseBodyAsString();
+			if (HttpStatus.NOT_FOUND.value() == statusCode || HttpStatus.BAD_REQUEST.value() == statusCode
+			    || HttpStatus.CONFLICT.value() == statusCode) {
+				LOGGER.error(responseBody);
+				return false;
+			} else {
+				throw new VeraPDFWorkerException(TaskError.CLEAR_JOB_PROGRESS_ERROR, responseBody);
 			}
 		}
 	}

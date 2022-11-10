@@ -82,6 +82,8 @@ public class JobServiceGetJobTests {
 				.andExpect(content().json("{'id':'" + job.getId() + "'," +
 						"'profile':'TAGGED_PDF'," +
 						"'status':'FINISHED'," +
+						"'progress':null," +
+						"'queuePosition':null," +
 						"'tasks':[{" +
 						"'fileId' : '893ce251-4754-4d92-a6bc-69f886ab1ac6'," +
 						"'status':'ERROR'," +
@@ -113,6 +115,8 @@ public class JobServiceGetJobTests {
 				.andExpect(content().json("{'id':'" + job.getId() + "'," +
 						"'profile':'TAGGED_PDF'," +
 						"'status':'FINISHED'," +
+						"'progress':null," +
+						"'queuePosition':null," +
 						"'tasks':[{" +
 						"'fileId' : '893ce251-4754-4d92-a6bc-69f886ab1ac6'," +
 						"'status':'FINISHED'," +

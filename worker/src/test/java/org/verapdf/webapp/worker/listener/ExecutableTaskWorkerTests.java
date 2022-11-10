@@ -84,6 +84,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("397856eb-10fb-48c1-ad45-c90e418f070a");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -114,6 +117,7 @@ class ExecutableTaskWorkerTests {
 				  + "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\","
 				  + "\"validationResultId\":\"d39da7b6-3665-4374-84e2-70c1e24e7029\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
@@ -122,6 +126,7 @@ class ExecutableTaskWorkerTests {
 		                                                   eq("3dface64e5b27f5fc9b64941eb0b36bf"), eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -129,6 +134,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -151,6 +159,7 @@ class ExecutableTaskWorkerTests {
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
@@ -163,6 +172,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -189,12 +201,14 @@ class ExecutableTaskWorkerTests {
 				  "\"errorType\":\"PROCESSING_INTERNAL_ERROR\"," +
 				  "\"errorMessage\":\"Couldn't parse stream\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -242,6 +256,7 @@ class ExecutableTaskWorkerTests {
 
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, null, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(null);
 	}
 
 	@Test
@@ -265,6 +280,7 @@ class ExecutableTaskWorkerTests {
 
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, null);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -274,6 +290,9 @@ class ExecutableTaskWorkerTests {
 
 		JobDTO jobDTO = createJob(jobId);
 		jobDTO.setProfile(null);
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -294,10 +313,12 @@ class ExecutableTaskWorkerTests {
 				  "\"errorType\":\"INVALID_CONFIGURATION_DATA_ERROR\"," +
 				  "\"errorMessage\":\"Missing profile for validation\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -307,6 +328,9 @@ class ExecutableTaskWorkerTests {
 
 		JobDTO jobDTO = createJob(jobId);
 		jobDTO.setStatus(JobStatus.CREATED);
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -321,6 +345,37 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
+		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
+		Mockito.verify(jobServiceClient).getJobById(jobId);
+		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
+	}
+
+	@Test
+	void waitingJobStatusOnGottenJobOnProcessTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
+
+		JobDTO jobDTO = createJob(jobId);
+		jobDTO.setStatus(JobStatus.WAITING);
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
+		Mockito.doReturn(processingLimit - 1)
+		       .when(jobServiceClient)
+		       .increaseTaskProcessingCount(jobId, fileId);
+		Mockito.doReturn(jobDTO)
+		       .when(jobServiceClient)
+		       .getJobById(jobId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .rejectAndDiscardJob(null, 1, jobId, fileId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
+
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
@@ -333,6 +388,9 @@ class ExecutableTaskWorkerTests {
 
 		JobDTO jobDTO = createJob(jobId);
 		jobDTO.setStatus(JobStatus.FINISHED);
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -347,8 +405,30 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
+		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
+	}
+
+	@Test
+	void notFoundJobOnUpdateJobStatusToProcessingTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
+
+		Mockito.doThrow(new RestClientResponseException("404 : [no body]", HttpStatus.NOT_FOUND.value(),
+		                                                "", null, "no body".getBytes(), null))
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .rejectAndDiscardJob(null, 1, jobId, fileId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
+
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
 	}
 
@@ -357,6 +437,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doThrow(new RestClientResponseException("404 : [no body]", HttpStatus.NOT_FOUND.value(),
 		                                                "", null, "no body".getBytes(), null))
 		       .when(jobServiceClient)
@@ -369,7 +452,30 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
+		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
+	}
+
+	@Test
+	void badRequestExceptionUpdateJobStatusToProcessingTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
+
+		Mockito.doThrow(new RestClientResponseException("400 : [incorrect type of parameters]",
+		                                                HttpStatus.BAD_REQUEST.value(), "", null,
+		                                                "incorrect type of parameters".getBytes(), null))
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .rejectAndDiscardJob(null, 1, jobId, fileId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
+
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
 	}
 
@@ -378,6 +484,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doThrow(new RestClientResponseException("400 : [incorrect type of parameters]",
 		                                                HttpStatus.BAD_REQUEST.value(), "", null,
 		                                                "incorrect type of parameters".getBytes(), null))
@@ -391,7 +500,33 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
+		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
+	}
+
+	@Test
+	void conflictExceptionUpdateJobStatusToProcessingTest() {
+		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
+		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
+
+		Mockito.doThrow(new RestClientResponseException("409 : [Can't change job status to PROCESSING, job with " +
+		                                                "specified id: " + jobId + " is not in WAITING state]",
+		                                                HttpStatus.CONFLICT.value(), "", null,
+		                                                ("Can't change job status to PROCESSING, job with specified id: "
+		                                                 + jobId + " is not in WAITING state").getBytes(),
+		                                                null))
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
+		Mockito.doNothing()
+		       .when(queueUtil)
+		       .rejectAndDiscardJob(null, 1, jobId, fileId);
+
+		executableTaskWorker.handleMessage(
+				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
+				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
+
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
 	}
 
@@ -400,9 +535,12 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
-		Mockito.doThrow(new RestClientResponseException("409 : [Job with id: " + jobId+ " not in processing state]",
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
+		Mockito.doThrow(new RestClientResponseException("409 : [Job with id: " + jobId + " not in processing state]",
 		                                                 HttpStatus.CONFLICT.value(), "", null,
-		                                                 ("Job with id: " + jobId+ " not in processing state").getBytes(),
+		                                                 ("Job with id: " + jobId + " not in processing state").getBytes(),
 		                                                 null))
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -414,6 +552,7 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
 	}
@@ -423,6 +562,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -438,6 +580,7 @@ class ExecutableTaskWorkerTests {
 				"{\"jobId\":\"780e3129-42a7-4154-8ce9-436fc1a6dc35\","
 				+ "\"fileId\":\"07b17d5d-1010-4980-b280-94129cb13838\"}", null, 1);
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(queueUtil).rejectAndDiscardJob(null, 1, jobId, fileId);
@@ -448,6 +591,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -470,10 +616,12 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"JOB_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -481,6 +629,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -505,11 +656,13 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"no body\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -517,6 +670,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -543,11 +699,13 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"internal exception during getting file descriptor\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -555,6 +713,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -580,11 +741,13 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -592,6 +755,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -616,11 +782,13 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"request timeout\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -628,6 +796,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -655,12 +826,14 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"no body\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -668,6 +841,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -697,12 +873,14 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"internal exception during getting file resource\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -710,6 +888,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -738,12 +919,14 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -751,6 +934,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -779,12 +965,14 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"FILE_OBTAINING_TO_PROCESS_ERROR\","
 				  + "\"errorMessage\":\"incorrect type of parameters\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	@Test
@@ -794,6 +982,9 @@ class ExecutableTaskWorkerTests {
 
 		StoredFileDTO storedFileDTO = createFileDescriptor(fileId);
 		storedFileDTO.setContentMD5("Incorrect checksum");
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -822,12 +1013,14 @@ class ExecutableTaskWorkerTests {
 				  + " obtained file checksum. Expected: 4043dbacc119258a99820d62552e6a93,"
 				  + " actual: Incorrect checksum\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
 		Mockito.verify(localStorageServiceClient).getFileResourceById(fileId);
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	//@Test
@@ -835,6 +1028,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -870,6 +1066,7 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				  + "\"errorMessage\":\"internal exception during saving file report\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
@@ -879,6 +1076,7 @@ class ExecutableTaskWorkerTests {
 		                                                   eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	//@Test
@@ -886,6 +1084,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -920,6 +1121,7 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				  + "\"errorMessage\":\"incorrect parameters\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
@@ -929,6 +1131,7 @@ class ExecutableTaskWorkerTests {
 		                                                   eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	//@Test
@@ -936,6 +1139,9 @@ class ExecutableTaskWorkerTests {
 		UUID jobId = UUID.fromString("780e3129-42a7-4154-8ce9-436fc1a6dc35");
 		UUID fileId = UUID.fromString("07b17d5d-1010-4980-b280-94129cb13838");
 
+		Mockito.doReturn(true)
+		       .when(jobServiceClient)
+		       .updateJobStatusToProcessing(jobId);
 		Mockito.doReturn(processingLimit - 1)
 		       .when(jobServiceClient)
 		       .increaseTaskProcessingCount(jobId, fileId);
@@ -969,6 +1175,7 @@ class ExecutableTaskWorkerTests {
 				  + "\"errorType\":\"SAVE_RESULT_FILE_ERROR\","
 				  + "\"errorMessage\":\"request timeout\"}";
 
+		Mockito.verify(jobServiceClient).updateJobStatusToProcessing(jobId);
 		Mockito.verify(jobServiceClient).increaseTaskProcessingCount(jobId, fileId);
 		Mockito.verify(jobServiceClient).getJobById(jobId);
 		Mockito.verify(localStorageServiceClient).getFileDescriptorById(fileId);
@@ -978,6 +1185,7 @@ class ExecutableTaskWorkerTests {
 		                                                   eq(MediaType.APPLICATION_JSON));
 		Mockito.verify(queueSender).sendMessage(expectedMessage);
 		Mockito.verify(queueUtil).applyAndDiscardJob(null, 1, jobId, fileId);
+		Mockito.verify(jobServiceClient).clearJobProgress(jobId);
 	}
 
 	private Resource createResource() throws IOException {
