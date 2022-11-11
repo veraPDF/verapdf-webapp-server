@@ -118,6 +118,11 @@ public class JobService {
 	public boolean updateJobStatusToProcessing(UUID jobId) throws NotFoundException, ConflictException {
 		Job job = findJobById(jobId);
 
+		if (job.getStatus() == JobStatus.PROCESSING) {
+			LOGGER.info("Job with specified id: {} is already processing, skipping" +
+			            " job status updating to PROCESSING", jobId);
+			return true;
+		}
 		if (job.getStatus() != JobStatus.WAITING) {
 			throw new ConflictException("Can't change job status to PROCESSING, job with specified id: " + jobId +
 			                            " is not in WAITING state");
