@@ -5,6 +5,7 @@ spring:
 verapdf:
   task:
     processing-limit: 2
+    processing-timeout-in-min: 30
   local-storage-service:
     uri: http://localhost:8080/api
   job-service:

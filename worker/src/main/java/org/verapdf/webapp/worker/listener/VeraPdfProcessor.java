@@ -3,6 +3,7 @@ package org.verapdf.webapp.worker.listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
@@ -17,6 +18,7 @@ import org.verapdf.pdfa.validation.validators.ValidatorFactory;
 import org.verapdf.processor.reports.Reports;
 import org.verapdf.processor.reports.ValidationDetails;
 import org.verapdf.processor.reports.ValidationReport;
+import org.verapdf.processor.reports.enums.JobEndStatus;
 import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
@@ -45,11 +47,14 @@ public class VeraPdfProcessor {
 	private static final String NONCOMPLIANT_STATEMENT = STATEMENT_PREFIX
 			+ NOT_INSERT + STATEMENT_SUFFIX;
 
+	private final int processingTimeout;
 	private final ProfileMapper profileMapper;
 	private final JobServiceClient jobServiceClient;
 
 	@Autowired
-	public VeraPdfProcessor(ProfileMapper profileMapper, JobServiceClient jobServiceClient) {
+	public VeraPdfProcessor(@Value("${verapdf.task.processing-timeout-in-min}") int processingTimeout,
+	                        ProfileMapper profileMapper, JobServiceClient jobServiceClient) {
+		this.processingTimeout = processingTimeout;
 		this.profileMapper = profileMapper;
 		this.jobServiceClient = jobServiceClient;
 		VeraGreenfieldFoundryProvider.initialise();
@@ -85,7 +90,7 @@ public class VeraPdfProcessor {
 			return Reports.createValidationReport(details,
 					validationResult.getProfileDetails().getName(),
 					getStatement(validationResult.isCompliant()),
-					validationResult.isCompliant());
+					validationResult.isCompliant(), validationResult.getJobEndStatus().getValue());
 		} catch (Exception e) {
 			throw new VeraPDFProcessingException(e.getMessage(), e);
 		}
@@ -93,17 +98,20 @@ public class VeraPdfProcessor {
 
 	private ValidationResult startValidation(PDFAValidator validator, PDFAParser parser,
 	                                         UUID jobId) throws ValidationException {
-		Runnable runnable = () -> {
+		Runnable updateProgress = () -> {
 			try {
 				updateJobProgress(jobId, validator.getValidationProgressString());
 			} catch (VeraPDFWorkerException e) {
 				e.printStackTrace();
 			}
 		};
-		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-		executor.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
+		Runnable stopJob = () -> validator.cancelValidation(JobEndStatus.TIMEOUT);
 
-		ValidationResult validationResult =  validator.validate(parser);
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
+		executor.schedule(stopJob, processingTimeout, TimeUnit.MINUTES);
+		executor.scheduleAtFixedRate(updateProgress, 0, 1, TimeUnit.SECONDS);
+
+		ValidationResult validationResult = validator.validate(parser);
 
 		executor.shutdown();
 		return validationResult;
