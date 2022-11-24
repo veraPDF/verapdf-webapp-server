@@ -31,6 +31,7 @@ verapdf:
         max-size: ${amqp.server.listening.queue.max.size}
   task:
     processing-limit: ${task.processing.limit}
+    processing-timeout-in-min: ${task.processing.timeout.in.min}
   files:
     worker-dir: /opt/verapdf/worker/files/
   local-storage-service:

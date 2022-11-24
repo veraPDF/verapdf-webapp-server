@@ -93,7 +93,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 
 			Boolean updateJobStatusSuccess = updateJobStatusToProcessing(jobId);
 			if (updateJobStatusSuccess == null || !updateJobStatusSuccess) {
-				// if setting PROCESSING status to the job was unsuccessful (job is already processing or finished)
+				// if setting PROCESSING status to the job was unsuccessful (job is already finished or hasn't started yet)
 				queueUtil.rejectAndDiscardJob(channel, deliveryTag, jobId, fileId);
 				return;
 			}
