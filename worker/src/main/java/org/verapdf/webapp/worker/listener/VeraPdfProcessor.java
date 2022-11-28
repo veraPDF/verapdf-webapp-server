@@ -100,7 +100,10 @@ public class VeraPdfProcessor {
 	                                         UUID jobId) throws ValidationException {
 		Runnable updateProgress = () -> {
 			try {
-				updateJobProgress(jobId, validator.getValidationProgressString());
+				boolean cancelJob = updateJobProgress(jobId, validator.getValidationProgressString());
+				if (cancelJob) {
+					validator.cancelValidation(JobEndStatus.CANCELLED);
+				}
 			} catch (VeraPDFWorkerException e) {
 				e.printStackTrace();
 			}
@@ -119,7 +122,7 @@ public class VeraPdfProcessor {
 
 	private Boolean updateJobProgress(UUID jobId, String progress) throws VeraPDFWorkerException {
 		try {
-			return jobServiceClient.updateJobProgress(jobId, progress);
+			return jobServiceClient.updateProgressAndCheckCancellationOfJob(jobId, progress);
 		} catch (RestClientResponseException e) {
 			int statusCode = e.getRawStatusCode();
 			String responseBody = e.getResponseBodyAsString();

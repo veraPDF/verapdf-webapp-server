@@ -49,8 +49,9 @@ public class JobController {
 	}
 
 	@PatchMapping(value = {"/{jobId}/progress/{progress}", "/{jobId}/progress"})
-	public void jobProgressUpdate(@PathVariable UUID jobId, @PathVariable(required = false) String progress) {
-		jobService.checkAndUpdateJobProgress(jobId, progress);
+	public boolean updateProgressAndCheckCancellationOfJob(@PathVariable UUID jobId,
+	                                                       @PathVariable(required = false) String progress) {
+		return jobService.updateProgressAndCheckCancellationOfJob(jobId.toString(), progress);
 	}
 
 	@PatchMapping("/{jobId}/increaseTaskProcessingCount/file/{fileId}")
@@ -74,5 +75,10 @@ public class JobController {
 	@PostMapping("/{jobId}/execution")
 	public JobDTO startJobExecution(@PathVariable UUID jobId) throws VeraPDFBackendException {
 		return jobService.startJobExecution(jobId);
+	}
+
+	@PostMapping("/{jobId}/cancel")
+	public void cancelJobExecution(@PathVariable UUID jobId) {
+		jobService.cancelJobExecution(jobId);
 	}
 }
