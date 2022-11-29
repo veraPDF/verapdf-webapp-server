@@ -61,7 +61,7 @@ public class JobServiceClient {
 		return false;
 	}
 
-	public Boolean updateJobProgress(UUID jobId, String progress) {
+	public Boolean updateProgressAndCheckCancellationOfJob(UUID jobId, String progress) {
 		if (jobId != null) {
 			return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
 			                                                       .path("/jobs/{jobId}/progress/{progress}")

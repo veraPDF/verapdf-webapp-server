@@ -23,6 +23,7 @@ import org.verapdf.webapp.jobservice.server.entity.JobTask;
 import org.verapdf.webapp.jobservice.server.mapper.JobMapper;
 import org.verapdf.webapp.jobservice.server.repository.JobRepository;
 import org.verapdf.webapp.jobservice.server.repository.JobTaskRepository;
+import org.verapdf.webapp.jobservice.server.util.JobCancelProperties;
 import org.verapdf.webapp.jobservice.server.util.JobProgressProperties;
 import org.verapdf.webapp.jobservice.server.util.JobQueueProperties;
 import org.verapdf.webapp.queueclient.sender.QueueSender;
@@ -51,13 +52,14 @@ public class JobService {
 
 	private final JobProgressProperties jobProgressProperties;
 	private final JobQueueProperties jobQueueProperties;
+	private final JobCancelProperties jobCancelProperties;
 
 	public JobService(@Value("${verapdf.cleaning.lifetime-delay-days}") int jobLifetimeDays,
 	                  @Value("${verapdf.task.processing-limit}") int processingLimit,
 	                  JobRepository jobRepository, JobTaskRepository taskRepository,
 	                  QueueSender queueSender, JobTaskResultHandler jobTaskResultHandler, JobMapper jobMapper,
 	                  ObjectMapper objectMapper, JobProgressProperties jobProgressProperties,
-	                  JobQueueProperties jobQueueProperties) {
+	                  JobQueueProperties jobQueueProperties, JobCancelProperties jobCancelProperties) {
 		this.jobLifetimeDays = jobLifetimeDays;
 		this.processingLimit = processingLimit;
 		this.jobRepository = jobRepository;
@@ -68,6 +70,7 @@ public class JobService {
 		this.objectMapper = objectMapper;
 		this.jobProgressProperties = jobProgressProperties;
 		this.jobQueueProperties = jobQueueProperties;
+		this.jobCancelProperties = jobCancelProperties;
 	}
 
 	@Transactional
@@ -135,12 +138,17 @@ public class JobService {
 		return true;
 	}
 
-	public void checkAndUpdateJobProgress(UUID jobId, String progress) {
+	public boolean updateProgressAndCheckCancellationOfJob(String jobId, String progress) {
 		if (progress != null) {
-			jobProgressProperties.updateProgressForJob(jobId.toString(), progress);
+			jobProgressProperties.updateProgressForJob(jobId, progress);
 		} else {
-			jobProgressProperties.clearJobProgressByJobId(jobId.toString());
+			jobProgressProperties.clearJobProgressByJobId(jobId);
 		}
+		if (jobCancelProperties.isPresent(jobId)) {
+			jobCancelProperties.removeJobFromCancelled(jobId);
+			return true;
+		}
+		return false;
 	}
 
 	@Transactional
@@ -204,6 +212,13 @@ public class JobService {
 		checkAndAddAdditionalFieldsForJobDTO(jobDTO, JobStatus.WAITING, jobId);
 
 		return jobDTO;
+	}
+
+	public void cancelJobExecution(UUID jobId) {
+		if (jobCancelProperties.isPresent(jobId.toString())) {
+			LOGGER.info("");
+		}
+		jobCancelProperties.cancelJob(jobId.toString());
 	}
 
 	@Transactional
