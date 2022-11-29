@@ -13,12 +13,12 @@
     <parent>
         <artifactId>verapdf-webapp-server</artifactId>
         <groupId>org.verapdf</groupId>
-        <version>0.8.76-SNAPSHOT</version>
+        <version>0.8.77-SNAPSHOT</version>
     </parent>
 
     <groupId>org.verapdf</groupId>
     <artifactId>local-storage-service</artifactId>
-    <version>0.8.76-SNAPSHOT</version>
+    <version>0.8.77-SNAPSHOT</version>
     <packaging>pom</packaging>
 
 
