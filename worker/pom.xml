@@ -6,12 +6,12 @@
     <parent>
         <artifactId>verapdf-webapp-server</artifactId>
         <groupId>org.verapdf</groupId>
-        <version>0.8.88-SNAPSHOT</version>
+        <version>0.8.89-SNAPSHOT</version>
     </parent>
 
     <groupId>org.verapdf</groupId>
     <artifactId>worker</artifactId>
-    <version>0.8.88-SNAPSHOT</version>
+    <version>0.8.89-SNAPSHOT</version>
 
     <properties>
         <java.version>11</java.version>
