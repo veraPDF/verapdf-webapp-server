@@ -19,6 +19,8 @@ import org.verapdf.processor.reports.Reports;
 import org.verapdf.processor.reports.ValidationDetails;
 import org.verapdf.processor.reports.ValidationReport;
 import org.verapdf.processor.reports.enums.JobEndStatus;
+import org.verapdf.wcag.algorithms.semanticalgorithms.containers.StaticContainers;
+import org.verapdf.wcag.algorithms.semanticalgorithms.utils.WCAGValidationInfo;
 import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.jobservice.model.entity.enums.Profile;
 import org.verapdf.webapp.jobservice.model.entity.enums.TaskError;
@@ -81,7 +83,7 @@ public class VeraPdfProcessor {
 							"Missing validation profile for " + profile.name());
 				}
 				try (PDFAParser parser = Foundries.defaultInstance().createParser(source, validationProfile.getPDFAFlavour());
-				     PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, 100, false, true, false)) {
+					PDFAValidator validator = ValidatorFactory.createValidator(validationProfile, 100, false, true, false)) {
 					validationResult = startValidation(validator, parser, jobId);
 				}
 			}
@@ -98,17 +100,30 @@ public class VeraPdfProcessor {
 
 	private ValidationResult startValidation(PDFAValidator validator, PDFAParser parser,
 	                                         UUID jobId) throws ValidationException {
+		WCAGValidationInfo wcagValidationInfo = StaticContainers.getWCAGValidationInfo();
 		Runnable updateProgress = () -> {
 			try {
-				boolean cancelJob = updateJobProgress(jobId, validator.getValidationProgressString());
+				String progress = wcagValidationInfo.getWCAGProgressStatus() != null ?
+						wcagValidationInfo.getWCAGProgressStatus().getValue() : null;
+				if (progress == null) {
+					progress = validator.getValidationProgressString();
+				}
+				boolean cancelJob = updateJobProgress(jobId, progress);
 				if (cancelJob) {
 					validator.cancelValidation(JobEndStatus.CANCELLED);
+					wcagValidationInfo.setAbortProcessing(true);
 				}
 			} catch (VeraPDFWorkerException e) {
 				e.printStackTrace();
 			}
 		};
-		Runnable stopJob = () -> validator.cancelValidation(JobEndStatus.TIMEOUT);
+		Runnable stopJob = () -> {
+			validator.cancelValidation(JobEndStatus.TIMEOUT);
+			wcagValidationInfo.setAbortProcessing(true);
+		};
+
+		wcagValidationInfo.setWCAGProgressStatus(null);
+		wcagValidationInfo.setAbortProcessing(false);
 
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 		executor.schedule(stopJob, processingTimeout, TimeUnit.MINUTES);
