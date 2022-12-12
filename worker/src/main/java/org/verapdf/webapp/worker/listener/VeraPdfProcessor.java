@@ -101,10 +101,11 @@ public class VeraPdfProcessor {
 	private ValidationResult startValidation(PDFAValidator validator, PDFAParser parser,
 	                                         UUID jobId) throws ValidationException {
 		WCAGValidationInfo wcagValidationInfo = StaticContainers.getWCAGValidationInfo();
+		wcagValidationInfo.setCurrentConsumer(null);
+		wcagValidationInfo.setAbortProcessing(false);
 		Runnable updateProgress = () -> {
 			try {
-				String progress = wcagValidationInfo.getWCAGProgressStatus() != null ?
-						wcagValidationInfo.getWCAGProgressStatus().getValue() : null;
+				String progress = wcagValidationInfo.getWCAGProcessStatusWithPercent();
 				if (progress == null) {
 					progress = validator.getValidationProgressString();
 				}
@@ -121,9 +122,6 @@ public class VeraPdfProcessor {
 			validator.cancelValidation(JobEndStatus.TIMEOUT);
 			wcagValidationInfo.setAbortProcessing(true);
 		};
-
-		wcagValidationInfo.setWCAGProgressStatus(null);
-		wcagValidationInfo.setAbortProcessing(false);
 
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 		executor.schedule(stopJob, processingTimeout, TimeUnit.MINUTES);
