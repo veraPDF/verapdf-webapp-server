@@ -100,9 +100,8 @@ public class VeraPdfProcessor {
 
 	private ValidationResult startValidation(PDFAValidator validator, PDFAParser parser,
 	                                         UUID jobId) throws ValidationException {
-		WCAGValidationInfo wcagValidationInfo = StaticContainers.getWCAGValidationInfo();
-		wcagValidationInfo.setCurrentConsumer(null);
-		wcagValidationInfo.setAbortProcessing(false);
+		WCAGValidationInfo wcagValidationInfo = new WCAGValidationInfo();
+		StaticContainers.setWCAGValidationInfo(wcagValidationInfo);
 		Runnable updateProgress = () -> {
 			try {
 				String progress = wcagValidationInfo.getWCAGProcessStatusWithPercent();
