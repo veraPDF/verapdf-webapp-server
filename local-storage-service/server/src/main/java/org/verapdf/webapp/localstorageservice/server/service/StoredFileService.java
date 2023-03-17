@@ -6,7 +6,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +20,9 @@ import org.verapdf.webapp.localstorageservice.server.repository.StoredFileReposi
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -58,11 +60,12 @@ public class StoredFileService {
 	public StoredFileDTO saveStoredFile(MultipartFile file, String expectedChecksum) throws VeraPDFBackendException {
 		StoredFile storedFile = constructStoredFile(file);
 		StoredFile savedStoredFile = storedFileRepository.saveAndFlush(storedFile);
+
 		Pair<String, String> localPathAndFileContentMD5;
 		try {
 			try (InputStream is = file.getInputStream()) {
-				localPathAndFileContentMD5 = localFileService.saveFileOnDisk(is,
-						storedFile.getId().toString(), expectedChecksum);
+				localPathAndFileContentMD5 =
+						localFileService.saveFileOnDisk(is, storedFile.getId().toString(), expectedChecksum);
 			} catch (IOException e) {
 				throw new VeraPDFBackendException("Error saving file on disk.", e);
 			}
@@ -72,19 +75,60 @@ public class StoredFileService {
 		}
 		savedStoredFile.setLocalPath(localPathAndFileContentMD5.getFirst());
 		savedStoredFile.setContentMD5(localPathAndFileContentMD5.getSecond());
+
 		return storedFileMapper.createDTOFromEntity(savedStoredFile);
+	}
+
+	@Transactional
+	public StoredFileDTO saveStoredFileFromUrl(String urlString) throws VeraPDFBackendException, IOException {
+		URL url = new URL(urlString);
+		StoredFile storedFile = constructStoredFileFromUrl(url);
+		StoredFile savedStoredFile = storedFileRepository.saveAndFlush(storedFile);
+
+		Pair<String, String> localPathAndFileContentMD5;
+		try {
+			try (InputStream is = url.openStream()) {
+				localPathAndFileContentMD5 =
+						localFileService.saveFileOnDisk(is, storedFile.getId().toString(), null);
+			} catch (IOException e) {
+				throw new VeraPDFBackendException("Error while extracting file from url and saving it on disk.", e);
+			}
+		} catch (Throwable e) {
+			storedFileRepository.delete(savedStoredFile);
+			throw e;
+		}
+		savedStoredFile.setLocalPath(localPathAndFileContentMD5.getFirst());
+		savedStoredFile.setContentMD5(localPathAndFileContentMD5.getSecond());
+
+ 		return storedFileMapper.createDTOFromEntity(savedStoredFile);
 	}
 
 	@Transactional
 	@Scheduled(cron = "{verapdf.cleaning.cron}")
 	public void clearStoredFiles() {
-		Instant expiredTime = Instant.now().minus(storedFileLifetimeDays, ChronoUnit.DAYS)
-				.truncatedTo(ChronoUnit.DAYS);
+		Instant expiredTime = Instant.now()
+		                             .minus(storedFileLifetimeDays, ChronoUnit.DAYS)
+		                             .truncatedTo(ChronoUnit.DAYS);
 		storedFileRepository.deleteAllByCreatedAtLessThan(expiredTime);
 	}
 
 	private StoredFile constructStoredFile(MultipartFile file) throws BadRequestException {
 		String contentType = file.getContentType();
+		contentType = checkAndGetContentType(contentType);
+
+		return new StoredFile(null, null, contentType, file.getSize(), file.getOriginalFilename());
+	}
+
+	private StoredFile constructStoredFileFromUrl(URL url) throws BadRequestException, IOException {
+		URLConnection urlConnection = url.openConnection();
+		String contentType = urlConnection.getContentType();
+		contentType = checkAndGetContentType(contentType);
+
+		String filename = Paths.get(url.getPath()).getFileName().toString();
+		return new StoredFile(null, null, contentType, urlConnection.getContentLength(), filename);
+	}
+
+	private String checkAndGetContentType(String contentType) throws BadRequestException {
 		if (contentType != null) {
 			try {
 				contentType = MediaType.valueOf(contentType).toString();
@@ -92,7 +136,8 @@ public class StoredFileService {
 				throw new BadRequestException("Content type can not be parsed: " + contentType);
 			}
 		}
-		return new StoredFile(null, null, contentType, file.getSize(), file.getOriginalFilename());
+
+		return contentType;
 	}
 
 	private StoredFile findStoredFileById(UUID fileId) throws NotFoundException {
