@@ -16,6 +16,7 @@ import org.verapdf.webapp.localstorageservice.server.service.StoredFileService;
 
 import javax.validation.constraints.Pattern;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 
@@ -32,14 +33,28 @@ public class FileController {
 
 	@PostMapping
 	public ResponseEntity<StoredFileDTO> uploadFile(@RequestPart("file") MultipartFile file,
-	                                @RequestPart(required = false) @Pattern(regexp = "^[\\da-fA-F]{32}$") String contentMD5) throws VeraPDFBackendException {
+	                                                @RequestPart(required = false) @Pattern(regexp = "^[\\da-fA-F]{32}$") String contentMD5)
+			throws VeraPDFBackendException {
 		StoredFileDTO storedFileDTO = storedFileService.saveStoredFile(file, contentMD5);
 		URI uri = MvcUriComponentsBuilder
-				.fromMethodName(FileController.class,
-						"getFileData", storedFileDTO.getId())
+				.fromMethodName(FileController.class, "getFileData", storedFileDTO.getId())
 				.build()
 				.encode()
 				.toUri();
+
+		return ResponseEntity.created(uri).body(storedFileDTO);
+	}
+
+	@PostMapping(value = "/url")
+	public ResponseEntity<StoredFileDTO> uploadFileAsUrl(@RequestParam String url) throws IOException,
+	                                                                                      VeraPDFBackendException {
+		StoredFileDTO storedFileDTO = storedFileService.saveStoredFileFromUrl(url);
+		URI uri = MvcUriComponentsBuilder
+				.fromMethodName(FileController.class, "getFileData", storedFileDTO.getId())
+				.build()
+				.encode()
+				.toUri();
+
 		return ResponseEntity.created(uri).body(storedFileDTO);
 	}
 

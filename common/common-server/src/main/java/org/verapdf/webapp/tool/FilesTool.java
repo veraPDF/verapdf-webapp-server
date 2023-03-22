@@ -22,8 +22,9 @@ public final class FilesTool {
 		}
 	}
 
-	public static String saveFileOnDiskAndCheck(InputStream fileStream, File fileToSave,
-	                                          String expectedContentMD5) throws BadRequestException, IOException {
+	public static String saveFileOnDiskAndCheck(InputStream fileStream,
+	                                            File fileToSave,
+	                                            String expectedContentMD5) throws BadRequestException, IOException {
 		try {
 			try (OutputStream out = Files.newOutputStream(fileToSave.toPath())) {
 				IOUtils.copyLarge(fileStream, out);
@@ -32,7 +33,7 @@ public final class FilesTool {
 			if (expectedContentMD5 != null && !expectedContentMD5.equals(actualContentMD5)) {
 				throw new BadRequestException(
 						"Expected file checksum doesn't match obtained file checksum. Expected: "
-								+ actualContentMD5 + ", actual: " + expectedContentMD5);
+						+ actualContentMD5 + ", actual: " + expectedContentMD5);
 			}
 
 			return actualContentMD5;

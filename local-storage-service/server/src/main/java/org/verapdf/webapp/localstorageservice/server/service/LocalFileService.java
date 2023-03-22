@@ -10,8 +10,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
-import org.verapdf.webapp.localstorageservice.server.error.exception.LowDiskSpaceException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
+import org.verapdf.webapp.localstorageservice.server.error.exception.LowDiskSpaceException;
 import org.verapdf.webapp.tool.FilesTool;
 
 import java.io.File;
@@ -47,7 +47,8 @@ public class LocalFileService {
 		return new FileSystemResource(fileOnDisk);
 	}
 
-	public Pair<String, String> saveFileOnDisk(InputStream inputStream, String fileName,
+	public Pair<String, String> saveFileOnDisk(InputStream inputStream,
+	                                           String fileName,
 	                                           String expectedContentMD5) throws IOException, VeraPDFBackendException {
 		checkNewFileAvailability();
 		return saveFile(inputStream, fileName, expectedContentMD5);
@@ -81,7 +82,8 @@ public class LocalFileService {
 		return res;
 	}
 
-	private Pair<String, String> saveFile(InputStream inputStream, String fileName,
+	private Pair<String, String> saveFile(InputStream inputStream,
+	                                      String fileName,
 	                                      String expectedContentMD5) throws VeraPDFBackendException, IOException {
 		File dirToSaveFile = getDirToSaveFile();
 		File toSave = new File(dirToSaveFile, fileName);
