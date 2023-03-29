@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.verapdf.processor.reports.ValidationReport;
+import org.verapdf.processor.reports.enums.JobEndStatus;
 import org.verapdf.webapp.error.exception.BadRequestException;
 import org.verapdf.webapp.jobservice.client.service.JobServiceClient;
 import org.verapdf.webapp.jobservice.model.dto.ExecutableTaskDTO;
@@ -75,7 +76,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 		try {
 			taskDTO = objectMapper.readValue(message, ExecutableTaskDTO.class);
 		} catch (Exception e) {
-			LOGGER.error("Could not parse to ExecutableTaskDTO data: " + message);
+			LOGGER.error("Could not parse to ExecutableTaskDTO data: {}", message);
 			queueUtil.rejectAndDiscardJob(channel, deliveryTag, null, null);
 			return;
 		}
@@ -93,7 +94,8 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 
 			Boolean updateJobStatusSuccess = updateJobStatusToProcessing(jobId);
 			if (updateJobStatusSuccess == null || !updateJobStatusSuccess) {
-				// if setting PROCESSING status to the job was unsuccessful (job is already finished or hasn't started yet)
+				// if setting PROCESSING status to the job was unsuccessful
+				// (job is already finished, hasn't started yet or has been cancelled while waiting)
 				queueUtil.rejectAndDiscardJob(channel, deliveryTag, jobId, fileId);
 				return;
 			}
@@ -106,7 +108,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 
 			JobDTO jobDTO = getJob(jobId);
 			if (jobDTO == null || JobStatus.PROCESSING != jobDTO.getStatus()) {
-				// no job to be process or job is already finished
+				// no job to process or job is already finished
 				queueUtil.rejectAndDiscardJob(channel, deliveryTag, jobId, fileId);
 				return;
 			}
@@ -121,6 +123,10 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 					= veraPdfProcessor.validate(fileToProcess, jobDTO.getProfile(), jobId);
 
 			LOGGER.info("Validation end: {}", jobId);
+
+			if (JobEndStatus.CANCELLED.getValue().equals(validationReport.getJobEndStatus())) {
+				updateJobStatusToCancelled(jobId);
+			}
 
 			StoredFileDTO reportFile = saveReportFile(validationReport, fileId);
 
@@ -210,7 +216,7 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 
 	private Boolean updateJobStatusToProcessing(UUID jobId) throws VeraPDFWorkerException {
 		try {
-			 return jobServiceClient.updateJobStatusToProcessing(jobId);
+			return jobServiceClient.updateJobStatusToProcessing(jobId);
 		} catch (RestClientResponseException e) {
 			int statusCode = e.getRawStatusCode();
 			String responseBody = e.getResponseBodyAsString();
@@ -220,6 +226,21 @@ public class ExecutableTaskWorker implements QueueListenerHandler {
 				return false;
 			} else {
 				throw new VeraPDFWorkerException(TaskError.UPDATE_JOB_STATUS_TO_PROCESSING_ERROR, responseBody);
+			}
+		}
+	}
+
+	private void updateJobStatusToCancelled(UUID jobId) throws VeraPDFWorkerException {
+		try {
+			jobServiceClient.updateJobStatusToCancelled(jobId);
+		} catch (RestClientResponseException e) {
+			int statusCode = e.getRawStatusCode();
+			String responseBody = e.getResponseBodyAsString();
+			if (HttpStatus.NOT_FOUND.value() == statusCode || HttpStatus.BAD_REQUEST.value() == statusCode
+			    || HttpStatus.CONFLICT.value() == statusCode) {
+				LOGGER.error(responseBody);
+			} else {
+				throw new VeraPDFWorkerException(TaskError.UPDATE_JOB_STATUS_TO_CANCELLED_ERROR, responseBody);
 			}
 		}
 	}

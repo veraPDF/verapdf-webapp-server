@@ -101,7 +101,9 @@ public class JobTask {
 	}
 
 	public void setSuccessfulResult(UUID resultFileId) {
-		this.status = TaskStatus.FINISHED;
+		if (TaskStatus.CANCELLED != this.status) {
+			this.status = TaskStatus.FINISHED;
+		}
 		this.errorType = null;
 		this.errorMessage = null;
 		this.resultFileId = resultFileId;

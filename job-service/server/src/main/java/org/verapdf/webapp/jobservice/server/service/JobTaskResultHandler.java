@@ -124,7 +124,7 @@ public class JobTaskResultHandler implements QueueListenerHandler, QueueSenderEr
 	public void updateJobStatus(Job job) {
 		for (JobTask task : job.getJobTasks()) {
 			if (task.getStatus() == TaskStatus.CREATED || task.getStatus() == TaskStatus.WAITING ||
-			    task.getStatus() == TaskStatus.PROCESSING) {
+			    task.getStatus() == TaskStatus.PROCESSING || task.getStatus() == TaskStatus.CANCELLED) {
 				return;
 			}
 		}
