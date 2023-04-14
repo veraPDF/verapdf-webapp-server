@@ -14,6 +14,10 @@ public class JobQueueProperties {
 		jobIdsWaitingInQueue.add(jobId);
 	}
 
+	public boolean isJobWaiting(UUID jobId) {
+		return jobIdsWaitingInQueue.contains(jobId);
+	}
+
 	public Integer getJobPositionInQueue(UUID jobId) {
 		return jobIdsWaitingInQueue.indexOf(jobId);
 	}

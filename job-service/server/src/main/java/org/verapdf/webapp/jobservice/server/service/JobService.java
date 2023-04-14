@@ -119,8 +119,16 @@ public class JobService {
 
 	@Transactional
 	public boolean updateJobStatusToProcessing(UUID jobId) throws NotFoundException, ConflictException {
-		Job job = findJobById(jobId);
+		if (!jobRepository.existsById(jobId)) {
+			LOGGER.info("Job with specified id: {} has been deleted", jobId);
+			return false;
+		}
 
+		Job job = findJobById(jobId);
+		if (job.getStatus() == JobStatus.CANCELLED && !jobQueueProperties.isJobWaiting(jobId)) {
+			LOGGER.info("Job with specified id: {} has been cancelled while waiting", jobId);
+			return false;
+		}
 		if (job.getStatus() == JobStatus.PROCESSING) {
 			LOGGER.info("Job with specified id: {} is already processing, skipping" +
 			            " job status updating to PROCESSING", jobId);
@@ -131,11 +139,28 @@ public class JobService {
 			                            " is not in WAITING state");
 		}
 		updateJobAndTasksStatus(job, JobStatus.PROCESSING, TaskStatus.PROCESSING);
-
 		jobQueueProperties.removeJobFromWaitingJobs(jobId);
-		jobRepository.saveAndFlush(job);
 
 		return true;
+	}
+
+	@Transactional
+	public void updateJobStatusToCancelled(UUID jobId) throws NotFoundException {
+		if (!jobRepository.existsById(jobId)) {
+			LOGGER.info("Job with specified id: {} has been deleted", jobId);
+			return;
+		}
+
+		Job job = findJobById(jobId);
+		if (job.getStatus() == JobStatus.CANCELLED) {
+			LOGGER.info("Job with specified id: {} has already been cancelled, skipping" +
+			            " job status updating to CANCELLED", jobId);
+			return;
+		}
+
+		LOGGER.info("Job with specified id: {} has been cancelled during validation, " +
+		            "updating job status to CANCELLED", jobId);
+		updateJobAndTasksStatus(job, JobStatus.CANCELLED, TaskStatus.CANCELLED);
 	}
 
 	public boolean updateProgressAndCheckCancellationOfJob(String jobId, String progress) {
@@ -148,6 +173,7 @@ public class JobService {
 			jobCancelProperties.removeJobFromCancelled(jobId);
 			return true;
 		}
+
 		return false;
 	}
 
@@ -214,19 +240,33 @@ public class JobService {
 		return jobDTO;
 	}
 
-	public void cancelJobExecution(UUID jobId) {
+	@Transactional
+	public void cancelJobExecution(UUID jobId) throws NotFoundException {
 		if (jobCancelProperties.isPresent(jobId.toString())) {
-			LOGGER.info("");
+			LOGGER.info("Job with the id {} has already been cancelled", jobId);
 		}
-		jobCancelProperties.cancelJob(jobId.toString());
+
+		if (jobQueueProperties.isJobWaiting(jobId)) {
+			Job job = findJobById(jobId);
+			updateJobAndTasksStatus(job, JobStatus.CANCELLED, TaskStatus.CANCELLED);
+			jobQueueProperties.removeJobFromWaitingJobs(jobId);
+		} else {
+			jobCancelProperties.cancelJob(jobId.toString());
+		}
 	}
 
 	@Transactional
 	@Scheduled(cron = "{verapdf.cleaning.cron}")
 	public void clearJobsAndTasks() {
-		Instant expiredTime = Instant.now().minus(jobLifetimeDays, ChronoUnit.DAYS)
+		Instant expiredTime = Instant.now()
+		                             .minus(jobLifetimeDays, ChronoUnit.DAYS)
 		                             .truncatedTo(ChronoUnit.DAYS);
 		jobRepository.deleteAllByCreatedAtLessThan(expiredTime);
+	}
+
+	private Job findJobById(UUID jobId) throws NotFoundException {
+		return jobRepository.findById(jobId)
+		                    .orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
 	}
 
 	private void handleProcessingLimit(Job job, UUID jobId, UUID fileId) throws BadRequestException {
@@ -239,9 +279,12 @@ public class JobService {
 		throw new BadRequestException(errorMessage + ", jobId: " + jobId + ", fileId: " + fileId);
 	}
 
-	private Job findJobById(UUID jobId) throws NotFoundException {
-		return jobRepository.findById(jobId)
-		                    .orElseThrow(() -> new NotFoundException("Job with specified id not found in DB: " + jobId));
+	private void updateJobAndTasksStatus(Job job, JobStatus jobStatus, TaskStatus taskStatus) {
+		job.setStatus(jobStatus);
+		for (JobTask task : job.getJobTasks()) {
+			task.setStatus(taskStatus);
+		}
+		jobRepository.saveAndFlush(job);
 	}
 
 	private void checkAndAddAdditionalFieldsForJobDTO(JobDTO jobDTO, JobStatus status, UUID jobId) {
@@ -249,13 +292,6 @@ public class JobService {
 			jobDTO.setProgress(jobProgressProperties.getProgressForJob(jobId.toString()));
 		} else if (JobStatus.WAITING.equals(status)) {
 			jobDTO.setQueuePosition(jobQueueProperties.getJobPositionInQueue(jobId));
-		}
-	}
-
-	private void updateJobAndTasksStatus(Job job, JobStatus jobStatus, TaskStatus taskStatus) {
-		job.setStatus(jobStatus);
-		for (JobTask task : job.getJobTasks()) {
-			task.setStatus(taskStatus);
 		}
 	}
 }

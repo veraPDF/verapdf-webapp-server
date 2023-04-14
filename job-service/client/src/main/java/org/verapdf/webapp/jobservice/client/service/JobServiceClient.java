@@ -61,6 +61,15 @@ public class JobServiceClient {
 		return false;
 	}
 
+	public void updateJobStatusToCancelled(UUID jobId) {
+		if (jobId != null) {
+			restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
+			                                                .path("/jobs/{jobId}/status-cancelled")
+			                                                .buildAndExpand(jobId.toString())
+			                                                .toUri(), null, Void.class);
+		}
+	}
+
 	public Boolean updateProgressAndCheckCancellationOfJob(UUID jobId, String progress) {
 		if (jobId != null) {
 			return restTemplate.patchForObject(UriComponentsBuilder.fromUri(uriToJobService)
