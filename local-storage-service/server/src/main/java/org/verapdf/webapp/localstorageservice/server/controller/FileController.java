@@ -9,15 +9,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.verapdf.webapp.localstorageservice.model.dto.StoredFileDTO;
 import org.verapdf.webapp.error.exception.NotFoundException;
 import org.verapdf.webapp.error.exception.VeraPDFBackendException;
+import org.verapdf.webapp.localstorageservice.model.dto.StoredFileDTO;
 import org.verapdf.webapp.localstorageservice.server.service.StoredFileService;
 
 import javax.validation.constraints.Pattern;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 @RestController
@@ -47,7 +48,8 @@ public class FileController {
 
 	@PostMapping(value = "/url")
 	public ResponseEntity<StoredFileDTO> uploadFileAsUrl(@RequestParam String url) throws IOException,
-	                                                                                      VeraPDFBackendException {
+	                                                                                      VeraPDFBackendException,
+	                                                                                      URISyntaxException {
 		StoredFileDTO storedFileDTO = storedFileService.saveStoredFileFromUrl(url);
 		URI uri = MvcUriComponentsBuilder
 				.fromMethodName(FileController.class, "getFileData", storedFileDTO.getId())

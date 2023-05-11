@@ -20,6 +20,8 @@ import org.verapdf.webapp.localstorageservice.server.repository.StoredFileReposi
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Paths;
@@ -80,8 +82,11 @@ public class StoredFileService {
 	}
 
 	@Transactional
-	public StoredFileDTO saveStoredFileFromUrl(String urlString) throws VeraPDFBackendException, IOException {
+	public StoredFileDTO saveStoredFileFromUrl(String urlString) throws VeraPDFBackendException, IOException,
+	                                                                    URISyntaxException {
 		URL url = new URL(urlString);
+		URI uri = new URI(url.getProtocol(), url.getAuthority(), url.getPath(), url.getQuery(), null);
+		url = uri.toURL();
 		StoredFile storedFile = constructStoredFileFromUrl(url);
 		StoredFile savedStoredFile = storedFileRepository.saveAndFlush(storedFile);
 
