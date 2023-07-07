@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.verapdf</groupId>
         <artifactId>local-storage-service</artifactId>
-        <version>1.0.82-SNAPSHOT</version>
+        <version>1.0.83-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.verapdf</groupId>
     <artifactId>local-storage-service-model</artifactId>
-    <version>1.0.82-SNAPSHOT</version>
+    <version>1.0.83-SNAPSHOT</version>
 
 </project>
