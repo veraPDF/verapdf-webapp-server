@@ -95,7 +95,7 @@ services:
       - file-storage
       - queue
     environment:
-      JVM_OPTS: -Xms512m -Xmx2048m
+      JVM_OPTS: ${WORKER_JVM_OPTS}
       AMQP_SERVER_HOST: queue
       AMQP_USER: ${AMQP_SERVER_USER}
       AMQP_PASSWORD: ${AMQP_SERVER_PASSWORD}
