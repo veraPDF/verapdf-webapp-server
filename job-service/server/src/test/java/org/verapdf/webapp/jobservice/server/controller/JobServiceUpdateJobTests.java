@@ -52,7 +52,7 @@ public class JobServiceUpdateJobTests {
 	public void createUpdateGetJobWithTasksTest() throws Exception {
 		String uploadedJobId = createJobWithTasksAndReturnJobId();
 
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"," +
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"," +
 				"\"tasks\": [" +
 				"    {" +
 				"    \"fileId\":\"777bd16b-6bd5-404e-808e-5dc731c73963\"" +
@@ -73,7 +73,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -97,7 +97,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -120,7 +120,7 @@ public class JobServiceUpdateJobTests {
 	public void createUpdateGetJobWithSameTasksTest() throws Exception {
 		String uploadedJobId = createJobWithTasksAndReturnJobId();
 
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"," +
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"," +
 				"\"tasks\": [" +
 				"    {" +
 				"    \"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\"" +
@@ -138,7 +138,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -159,7 +159,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -178,7 +178,7 @@ public class JobServiceUpdateJobTests {
 	public void createUpdateGetJobWithPartialTaskUpdateTest() throws Exception {
 		String uploadedJobId = createJobWithTasksAndReturnJobId();
 
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"," +
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"," +
 				"\"tasks\": [" +
 				"    {" +
 				"    \"fileId\":\"774bd16b-7ad5-354e-808e-5dc731c73963\"" +
@@ -196,7 +196,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -216,7 +216,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -236,7 +236,7 @@ public class JobServiceUpdateJobTests {
 		String uploadedJobId = createJobWithTasksAndReturnJobId();
 
 		//Updating job
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"}";
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"}";
 
 		mockMvc.perform(MockMvcRequestBuilders.put("/jobs/" + uploadedJobId)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -244,7 +244,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -256,7 +256,7 @@ public class JobServiceUpdateJobTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(content().json("{'id':'" + uploadedJobId + "'," +
-						"'profile':'WCAG_2_1'," +
+						"'profile':'WCAG_2_2_COMPLETE'," +
 						"'status':'CREATED'," +
 						"'progress':null," +
 						"'queuePosition':null," +
@@ -269,7 +269,7 @@ public class JobServiceUpdateJobTests {
 		job.setStatus(JobStatus.PROCESSING);
 		job = jobRepository.saveAndFlush(job);
 
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"," +
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"," +
 				"\"tasks\": [" +
 				"    {" +
 				"    \"fileId\":\"777bd16b-6bd5-404e-808e-5dc731c73963\"" +
@@ -308,7 +308,7 @@ public class JobServiceUpdateJobTests {
 		job.setStatus(JobStatus.FINISHED);
 		job = jobRepository.saveAndFlush(job);
 
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"," +
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"," +
 				"\"tasks\": [" +
 				"    {" +
 				"    \"fileId\":\"777bd16b-6bd5-404e-808e-5dc731c73963\"" +
@@ -338,7 +338,7 @@ public class JobServiceUpdateJobTests {
 	@Test
 	public void updateJobWithoutJobInDatabaseTest() throws Exception {
 		String id = "893ce251-4754-4d92-a6bc-69f775ab1ac6";
-		String updateRequestBody = "{\"profile\": \"WCAG_2_1\"}";
+		String updateRequestBody = "{\"profile\": \"WCAG_2_2_COMPLETE\"}";
 
 		//Updating job
 		Exception resolvedException = mockMvc.perform(MockMvcRequestBuilders.put("/jobs/" + id)
