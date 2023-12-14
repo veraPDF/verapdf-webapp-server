@@ -35,23 +35,29 @@ class ProfileControllerTests {
 		       .andExpect(status().isOk())
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		       .andExpect(content().json("[" +
-		                                 "{\"profileName\":\"WCAG_2_1_COMPLETE\"," +
-		                                 "\"humanReadableName\":\"WCAG 2.1 (All)\"," +
+		                                 "{\"profileName\":\"WCAG_2_2_COMPLETE\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.2 Machine & Human (experimental)\"," +
+		                                 "\"enabled\":true}," + 
+		                                 "{\"profileName\":\"WCAG_2_2_MACHINE\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.2 (Machine)\"," +
 		                                 "\"enabled\":true}," +
-		                                 "{\"profileName\":\"WCAG_2_1\"," +
-		                                 "\"humanReadableName\":\"WCAG 2.1 (Extra)\"," +
+		                                 "{\"profileName\":\"WCAG_2_2_HUMAN\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.2 (Human)\"," +
 		                                 "\"enabled\":true}," +
-		                                 "{\"profileName\":\"WCAG_2_1_DEV\"," +
-		                                 "\"humanReadableName\":\"WCAG 2.1 (DEV)\"," +
-		                                 "\"enabled\":true}," +
-		                                 "{\"profileName\":\"PDFUA_1_MACHINE\"," +
-		                                 "\"humanReadableName\":\"PDF/UA-1 (Machine)\"," +
-		                                 "\"enabled\":true}," +
-		                                 "{\"profileName\":\"PDFUA_1_HUMAN\"," +
-		                                 "\"humanReadableName\":\"PDF/UA-1 (Human)\"," +
+		                                 "{\"profileName\":\"WCAG_2_2_DEV\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.2 (DEV)\"," +
 		                                 "\"enabled\":false}," +
+		                                 "{\"profileName\":\"PDFUA_1\"," +
+		                                 "\"humanReadableName\":\"PDF/UA-1\"," +
+		                                 "\"enabled\":true}," +
+		                                 "{\"profileName\":\"PDFUA_2\"," +
+		                                 "\"humanReadableName\":\"PDF/UA-2\"," +
+		                                 "\"enabled\":true}," +
+		                                 "{\"profileName\":\"PDFUA_2_TAGGED_PDF\"," +
+		                                 "\"humanReadableName\":\"PDF/UA-2 & ISO 32005\"," +
+		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"TAGGED_PDF\"," +
-		                                 "\"humanReadableName\":\"Tagged PDF\"," +
+		                                 "\"humanReadableName\":\"ISO 32005\"," +
 		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"PDFA_1_A\"," +
 		                                 "\"humanReadableName\":\"PDF/A-1A\"," +
