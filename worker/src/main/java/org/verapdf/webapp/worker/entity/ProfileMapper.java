@@ -41,10 +41,10 @@ public class ProfileMapper {
 		// PDF/UA related profilesMap
 		this.profilesMap.put(Profile.WCAG_2_2_COMPLETE,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
-				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-22-Complete.xml"))));
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-2-2-Complete.xml"))));
 		this.profilesMap.put(Profile.WCAG_2_2_MACHINE,
 				Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
-						"/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-22-Machine.xml"))));
+						"/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-2-2-Machine.xml"))));
 		this.profilesMap.put(Profile.PDFUA_1,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
 				                     "/profiles/veraPDF-validation-profiles/PDF_UA/PDFUA-1.xml"))));
@@ -59,10 +59,10 @@ public class ProfileMapper {
 				                     "/profiles/veraPDF-validation-profiles/PDF_UA/ISO-32005-Tagged.xml"))));
 		this.profilesMap.put(Profile.WCAG_2_2_HUMAN,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
-				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-22.xml"))));
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-2-2.xml"))));
 		this.profilesMap.put(Profile.WCAG_2_2_DEV,
 		                     Profiles.profileFromXml(Objects.requireNonNull(getClass().getResourceAsStream(
-				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-22-Dev.xml"))));
+				                     "/profiles/veraPDF-validation-profiles/PDF_UA/WCAG-2-2-Dev.xml"))));
 	}
 
 	public ValidationProfile getValidationProfile(Profile profile) {
