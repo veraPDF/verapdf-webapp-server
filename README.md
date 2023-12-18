@@ -55,3 +55,6 @@ Config assumes that you launch services on the following ports:
  
  ## API Reference
  https://github.com/veraPDF/verapdf-webapp-server/wiki/API-Reference
+
+ ## JVM heap size
+To change Java heap size in worker container change variable `WORKER_JVM_OPTS` in `.docker/.env` file.
