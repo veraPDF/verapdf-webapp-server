@@ -5,7 +5,7 @@
     <parent>
         <artifactId>verapdf-webapp-server</artifactId>
         <groupId>org.verapdf</groupId>
-        <version>1.0.286-SNAPSHOT</version>
+        <version>1.0.287-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
