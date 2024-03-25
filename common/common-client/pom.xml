@@ -5,7 +5,7 @@
     <parent>
         <artifactId>common</artifactId>
         <groupId>org.verapdf</groupId>
-        <version>1.0.333-SNAPSHOT</version>
+        <version>1.0.334-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
