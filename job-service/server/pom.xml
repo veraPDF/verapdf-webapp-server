@@ -5,7 +5,7 @@
     <parent>
         <artifactId>job-service</artifactId>
         <groupId>org.verapdf</groupId>
-        <version>1.0.337-SNAPSHOT</version>
+        <version>1.0.338-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
