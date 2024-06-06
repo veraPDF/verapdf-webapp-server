@@ -1,0 +1,2 @@
+WCAG_2_2_COMPLETE,https://digitalaccessibility.uoregon.edu/sites/default/files/2020-11/Table%20Example%20-%20Fixed.pdf
+WCAG_2_2_MACHINE,https://digitalaccessibility.uoregon.edu/sites/default/files/2020-11/Table%20Example%20-%20Fixed.pdf
