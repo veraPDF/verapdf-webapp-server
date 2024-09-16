@@ -1,5 +1,5 @@
 [submodule "worker/src/main/resources/profiles/veraPDF-validation-profiles"]
 	path = worker/src/main/resources/profiles/veraPDF-validation-profiles
 	url = https://github.com/veraPDF/veraPDF-validation-profiles.git
-	branch = integration
+	branch = logius
 	update = rebase
