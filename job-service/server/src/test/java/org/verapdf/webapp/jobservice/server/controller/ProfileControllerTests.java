@@ -35,15 +35,15 @@ class ProfileControllerTests {
 		       .andExpect(status().isOk())
 		       .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
 		       .andExpect(content().json("[" +
-		                                 "{\"profileName\":\"WCAG_2_2_COMPLETE\"," +
-		                                 "\"humanReadableName\":\"WCAG 2.2 Machine & Human (experimental)\"," +
-		                                 "\"enabled\":true}," + 
 		                                 "{\"profileName\":\"WCAG_2_2_MACHINE\"," +
 		                                 "\"humanReadableName\":\"WCAG 2.2 (Machine)\"," +
 		                                 "\"enabled\":true}," +
+		                                 "{\"profileName\":\"WCAG_2_2_COMPLETE\"," +
+		                                 "\"humanReadableName\":\"WCAG 2.2 Machine & Human (experimental)\"," +
+		                                 "\"enabled\":true}," +
 		                                 "{\"profileName\":\"WCAG_2_2_HUMAN\"," +
 		                                 "\"humanReadableName\":\"WCAG 2.2 (Human)\"," +
-		                                 "\"enabled\":true}," +
+		                                 "\"enabled\":false}," +
 		                                 "{\"profileName\":\"WCAG_2_2_DEV\"," +
 		                                 "\"humanReadableName\":\"WCAG 2.2 (DEV)\"," +
 		                                 "\"enabled\":false}," +
